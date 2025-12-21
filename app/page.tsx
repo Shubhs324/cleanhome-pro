@@ -71,7 +71,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // Générer les tâches planifiées pour le mois
     const scheduled = getScheduledTasksForMonth(currentYear, currentMonth, TASKS);
     setScheduledTasks(scheduled);
   }, [currentMonth, currentYear]);
@@ -117,6 +116,36 @@ export default function Home() {
     });
   };
 
+  // ✅ NOUVELLE FONCTION : Cocher tâche depuis calendrier
+  const toggleTaskCompletionForDate = (taskId: number, date: string) => {
+    const now = new Date().toISOString();
+    
+    setHistory(prev => {
+      const existing = prev.find(h => h.taskId === taskId && h.date === date);
+      if (existing) {
+        // Décocher
+        return prev.filter(item => !(item.taskId === taskId && item.date === date));
+      } else {
+        // Cocher
+        return [...prev, { taskId, completedAt: now, date }];
+      }
+    });
+
+    // Si c'est aujourd'hui, mettre à jour aussi completedTasks
+    const today = new Date().toISOString().split('T')[0];
+    if (date === today) {
+      setCompletedTasks(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(taskId)) {
+          newSet.delete(taskId);
+        } else {
+          newSet.add(taskId);
+        }
+        return newSet;
+      });
+    }
+  };
+
   const getLast7Days = () => {
     const days = [];
     for (let i = 6; i >= 0; i--) {
@@ -152,10 +181,9 @@ export default function Home() {
     return streak;
   })();
 
-  // Calendrier
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-  const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; // Lundi = 0
+  const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
 
   const prevMonth = () => {
     if (currentMonth === 0) {
@@ -338,7 +366,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Jours de la semaine */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem', marginBottom: '0.5rem' }}>
             {dayNames.map(day => (
               <div key={day} style={{ 
@@ -353,14 +380,11 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Grille du calendrier */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem' }}>
-            {/* Cases vides avant le 1er du mois */}
             {Array.from({ length: adjustedFirstDay }).map((_, i) => (
               <div key={`empty-${i}`} style={{ aspectRatio: '1', background: theme.bg, borderRadius: '8px' }} />
             ))}
             
-            {/* Jours du mois */}
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const day = i + 1;
               const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -420,7 +444,7 @@ export default function Home() {
             })}
           </div>
 
-          {/* Tâches du jour sélectionné */}
+          {/* ✅ TÂCHES CLIQUABLES DU JOUR */}
           {selectedDate && (
             <div style={{ marginTop: '1.5rem', padding: '1rem', background: theme.bg, borderRadius: '12px' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: theme.text, marginBottom: '1rem' }}>
@@ -435,54 +459,72 @@ export default function Home() {
                     return (
                       <div 
                         key={idx}
+                        onClick={() => toggleTaskCompletionForDate(task.taskId, selectedDate)}
                         style={{
                           padding: '1rem',
                           background: isCompleted ? (darkMode ? '#1e3a1e' : '#e8f5e9') : theme.cardBg,
                           border: isCompleted ? '2px solid #4caf50' : `1px solid ${theme.border}`,
-                          borderRadius: '8px'
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease'
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                          {isCompleted && <span style={{ color: '#4caf50' }}>✓</span>}
-                          <span style={{ 
-                            fontWeight: '600', 
-                            fontSize: '0.95rem',
-                            color: isCompleted ? '#4caf50' : theme.text,
-                            textDecoration: isCompleted ? 'line-through' : 'none'
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div style={{
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            border: isCompleted ? '2px solid #4caf50' : `2px solid ${theme.border}`,
+                            background: isCompleted ? '#4caf50' : 'transparent',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
                           }}>
-                            {task.taskName}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', flexWrap: 'wrap' }}>
-                          <span style={{ 
-                            padding: '0.2rem 0.5rem', 
-                            background: darkMode ? '#1e3a8a' : '#e3f2fd',
-                            color: darkMode ? '#93c5fd' : '#1565c0',
-                            borderRadius: '4px',
-                            fontWeight: '600'
-                          }}>
-                            {task.zone}
-                          </span>
-                          <span style={{ 
-                            padding: '0.2rem 0.5rem', 
-                            background: darkMode ? '#065f46' : '#d1fae5',
-                            color: darkMode ? '#6ee7b7' : '#047857',
-                            borderRadius: '4px',
-                            fontWeight: '600'
-                          }}>
-                            {task.frequency}
-                          </span>
-                          {task.estimatedTime && (
-                            <span style={{ 
-                              padding: '0.2rem 0.5rem', 
-                              background: darkMode ? '#7c2d12' : '#fff3e0',
-                              color: darkMode ? '#fdba74' : '#e65100',
-                              borderRadius: '4px',
-                              fontWeight: '600'
+                            {isCompleted && <span style={{ color: 'white', fontSize: '14px', fontWeight: 'bold' }}>✓</span>}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ 
+                              fontWeight: '600', 
+                              fontSize: '0.95rem',
+                              color: isCompleted ? '#4caf50' : theme.text,
+                              textDecoration: isCompleted ? 'line-through' : 'none',
+                              marginBottom: '0.5rem'
                             }}>
-                              ⏱ {task.estimatedTime}m
-                            </span>
-                          )}
+                              {task.taskName}
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', flexWrap: 'wrap' }}>
+                              <span style={{ 
+                                padding: '0.2rem 0.5rem', 
+                                background: darkMode ? '#1e3a8a' : '#e3f2fd',
+                                color: darkMode ? '#93c5fd' : '#1565c0',
+                                borderRadius: '4px',
+                                fontWeight: '600'
+                              }}>
+                                {task.zone}
+                              </span>
+                              <span style={{ 
+                                padding: '0.2rem 0.5rem', 
+                                background: darkMode ? '#065f46' : '#d1fae5',
+                                color: darkMode ? '#6ee7b7' : '#047857',
+                                borderRadius: '4px',
+                                fontWeight: '600'
+                              }}>
+                                {task.frequency}
+                              </span>
+                              {task.estimatedTime && (
+                                <span style={{ 
+                                  padding: '0.2rem 0.5rem', 
+                                  background: darkMode ? '#7c2d12' : '#fff3e0',
+                                  color: darkMode ? '#fdba74' : '#e65100',
+                                  borderRadius: '4px',
+                                  fontWeight: '600'
+                                }}>
+                                  ⏱ {task.estimatedTime}m
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -555,7 +597,6 @@ export default function Home() {
 
       {!selectedZone ? (
         <>
-          {/* ZONES */}
           <div style={{ 
             background: theme.cardBg, 
             borderRadius: '16px', 
@@ -565,7 +606,7 @@ export default function Home() {
             border: `1px solid ${theme.border}`
           }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
-              �� {ZONES.length} Zones
+              📍 {ZONES.length} Zones
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
               {ZONES.map((zone) => {
@@ -615,7 +656,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* NOTIFICATIONS */}
           <div style={{ background: theme.cardBg, borderRadius: '16px', padding: '1.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: `1px solid ${theme.border}` }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
               🔔 Notifications
