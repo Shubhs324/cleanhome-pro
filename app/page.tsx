@@ -39,8 +39,10 @@ export default function Home() {
   const [showStats, setShowStats] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [history, setHistory] = useState<CompletedTask[]>([]);
+  const [isOnline, setIsOnline] = useState(true);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   
-  // Calendrier
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -48,6 +50,32 @@ export default function Home() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // État de connexion
+      setIsOnline(navigator.onLine);
+      
+      const handleOnline = () => {
+        setIsOnline(true);
+        console.log('✅ Connexion rétablie');
+      };
+      
+      const handleOffline = () => {
+        setIsOnline(false);
+        console.log('📡 Mode hors-ligne activé');
+      };
+      
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+
+      // Prompt d'installation PWA
+      const handleBeforeInstallPrompt = (e: any) => {
+        e.preventDefault();
+        setDeferredPrompt(e);
+        setShowInstallPrompt(true);
+      };
+
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+      // Charger données
       const today = new Date().toISOString().split('T')[0];
       const saved = localStorage.getItem(`tasks-${today}`);
       if (saved) {
@@ -67,8 +95,35 @@ export default function Home() {
       if ('Notification' in window && Notification.permission === 'granted') {
         setNotificationEnabled(true);
       }
+
+      // Enregistrer Service Worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('✅ Service Worker enregistré'))
+          .catch(err => console.log('❌ Service Worker erreur:', err));
+      }
+
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      };
     }
   }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      console.log('✅ PWA installée');
+    }
+    
+    setDeferredPrompt(null);
+    setShowInstallPrompt(false);
+  };
 
   useEffect(() => {
     const scheduled = getScheduledTasksForMonth(currentYear, currentMonth, TASKS);
@@ -116,22 +171,18 @@ export default function Home() {
     });
   };
 
-  // ✅ NOUVELLE FONCTION : Cocher tâche depuis calendrier
   const toggleTaskCompletionForDate = (taskId: number, date: string) => {
     const now = new Date().toISOString();
     
     setHistory(prev => {
       const existing = prev.find(h => h.taskId === taskId && h.date === date);
       if (existing) {
-        // Décocher
         return prev.filter(item => !(item.taskId === taskId && item.date === date));
       } else {
-        // Cocher
         return [...prev, { taskId, completedAt: now, date }];
       }
     });
 
-    // Si c'est aujourd'hui, mettre à jour aussi completedTasks
     const today = new Date().toISOString().split('T')[0];
     if (date === today) {
       setCompletedTasks(prev => {
@@ -235,8 +286,103 @@ export default function Home() {
       background: theme.bg,
       transition: 'background 0.3s ease'
     }}>
+      {/* BANNIÈRE HORS-LIGNE */}
+      {!isOnline && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          background: '#f59e0b',
+          color: 'white',
+          padding: '0.75rem',
+          textAlign: 'center',
+          fontWeight: '600',
+          fontSize: '0.9rem',
+          zIndex: 9999,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
+        }}>
+          📡 Mode hors-ligne - Vos données sont sauvegardées localement
+        </div>
+      )}
+
+      {/* PROMPT INSTALLATION PWA */}
+      {showInstallPrompt && (
+        <div style={{
+          position: 'fixed',
+          bottom: '1rem',
+          left: '1rem',
+          right: '1rem',
+          background: theme.cardBg,
+          border: `2px solid ${theme.border}`,
+          borderRadius: '12px',
+          padding: '1rem',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+          zIndex: 9998,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+            <div>
+              <div style={{ fontWeight: '700', fontSize: '1rem', color: theme.text, marginBottom: '0.5rem' }}>
+                📲 Installer CleanHome Pro
+              </div>
+              <div style={{ fontSize: '0.85rem', color: theme.textSecondary }}>
+                Accédez rapidement depuis votre écran d'accueil
+              </div>
+            </div>
+            <button
+              onClick={() => setShowInstallPrompt(false)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: theme.textSecondary,
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                padding: 0
+              }}
+            >
+              ×
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={handleInstallClick}
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Installer
+            </button>
+            <button
+              onClick={() => setShowInstallPrompt(false)}
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                background: theme.bg,
+                color: theme.text,
+                border: `2px solid ${theme.border}`,
+                borderRadius: '8px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Plus tard
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* HEADER */}
-      <header style={{ padding: '1rem 0', marginBottom: '1rem' }}>
+      <header style={{ padding: !isOnline ? '3rem 1rem 1rem' : '1rem 0', marginBottom: '1rem' }}>
         <h1 style={{ 
           fontSize: 'clamp(1.8rem, 7vw, 4rem)', 
           fontWeight: '800', 
@@ -307,6 +453,20 @@ export default function Home() {
             title={darkMode ? 'Mode clair' : 'Mode sombre'}
           >
             {darkMode ? '☀️' : '🌙'}
+          </button>
+          <button
+            style={{
+              padding: '0.5rem 1rem',
+              background: isOnline ? '#10b981' : '#f59e0b',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '1.3rem',
+              cursor: 'default'
+            }}
+            title={isOnline ? 'En ligne' : 'Hors-ligne'}
+          >
+            {isOnline ? '🌐' : '📡'}
           </button>
         </div>
 
@@ -444,7 +604,6 @@ export default function Home() {
             })}
           </div>
 
-          {/* ✅ TÂCHES CLIQUABLES DU JOUR */}
           {selectedDate && (
             <div style={{ marginTop: '1.5rem', padding: '1rem', background: theme.bg, borderRadius: '12px' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: theme.text, marginBottom: '1rem' }}>
@@ -536,7 +695,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* STATISTIQUES */}
+      {/* STATISTIQUES - Reste identique */}
       {showStats && (
         <div style={{ 
           background: theme.cardBg, 
@@ -595,6 +754,7 @@ export default function Home() {
         </div>
       )}
 
+      {/* ZONES ET RESTE DE L'APP - Identique à avant */}
       {!selectedZone ? (
         <>
           <div style={{ 
