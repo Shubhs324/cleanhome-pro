@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TASKS, ZONES } from '@/lib/tasksData';
-import { Task } from '@/types';
+import { TASKS, ZONES } from '../lib/tasksData';
+import { Task } from '../types';
 
 function requestNotificationPermission() {
   return new Promise<boolean>((resolve) => {
@@ -87,7 +87,7 @@ export default function Home() {
             boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
           }}>
             <h2 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#1e293b', marginBottom: '1.5rem' }}>
-              📍 Zones disponibles
+              �� Zones disponibles
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
               {ZONES.map((zone) => {
@@ -128,7 +128,7 @@ export default function Home() {
 
           <div style={{ background: 'white', borderRadius: '16px', padding: '2rem', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
             <h2 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#1e293b', marginBottom: '1.5rem' }}>
-              �� Notifications
+              🔔 Notifications
             </h2>
             {!notificationEnabled ? (
               <button 
