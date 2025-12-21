@@ -41,33 +41,28 @@ export default function Home() {
   // 1️⃣ PERSISTANCE LOCALSTORAGE
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Charger tâches du jour
       const today = new Date().toISOString().split('T')[0];
       const saved = localStorage.getItem(`tasks-${today}`);
       if (saved) {
         setCompletedTasks(new Set(JSON.parse(saved)));
       }
 
-      // Charger historique
       const savedHistory = localStorage.getItem('tasks-history');
       if (savedHistory) {
         setHistory(JSON.parse(savedHistory));
       }
 
-      // Charger mode sombre
       const savedDarkMode = localStorage.getItem('darkMode');
       if (savedDarkMode === 'true') {
         setDarkMode(true);
       }
 
-      // Charger notifications
       if ('Notification' in window && Notification.permission === 'granted') {
         setNotificationEnabled(true);
       }
     }
   }, []);
 
-  // Sauvegarder au changement
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const today = new Date().toISOString().split('T')[0];
@@ -100,18 +95,15 @@ export default function Home() {
       const newSet = new Set(prev);
       if (newSet.has(taskId)) {
         newSet.delete(taskId);
-        // Retirer de l'historique
         setHistory(h => h.filter(item => !(item.taskId === taskId && item.date === today)));
       } else {
         newSet.add(taskId);
-        // Ajouter à l'historique
         setHistory(h => [...h, { taskId, completedAt: now, date: today }]);
       }
       return newSet;
     });
   };
 
-  // 2️⃣ STATISTIQUES
   const getLast7Days = () => {
     const days = [];
     for (let i = 6; i >= 0; i--) {
@@ -154,7 +146,6 @@ export default function Home() {
 
   const frequencies = ['quotidienne', 'hebdomadaire', 'mensuelle', 'saisonnière', 'annuelle', 'trimestrielle'];
 
-  // 3️⃣ THÈME
   const theme = {
     bg: darkMode ? '#0f172a' : '#f8fafc',
     cardBg: darkMode ? '#1e293b' : '#ffffff',
@@ -167,16 +158,36 @@ export default function Home() {
 
   return (
     <main style={{ 
-      padding: '2rem 1rem', 
+      padding: '1rem', 
       maxWidth: '1200px', 
       margin: '0 auto',
       minHeight: '100vh',
       background: theme.bg,
       transition: 'background 0.3s ease'
     }}>
-      {/* HEADER */}
-      <header style={{ textAlign: 'center', padding: '2rem 0', position: 'relative' }}>
-        <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '1rem' }}>
+      {/* HEADER RESPONSIVE - CORRIGÉ */}
+      <header style={{ padding: '1rem 0', marginBottom: '1rem' }}>
+        {/* Titre centré */}
+        <h1 style={{ 
+          fontSize: 'clamp(1.8rem, 7vw, 4rem)', 
+          fontWeight: '800', 
+          background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          marginBottom: '0.5rem',
+          textAlign: 'center',
+          lineHeight: '1.2'
+        }}>
+          🏠 CleanHome Pro
+        </h1>
+
+        {/* Boutons EN DESSOUS du titre */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '0.5rem',
+          marginBottom: '1rem'
+        }}>
           <button
             onClick={() => setShowStats(!showStats)}
             style={{
@@ -186,7 +197,7 @@ export default function Home() {
               border: `2px solid ${theme.border}`,
               borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '1.5rem'
+              fontSize: '1.3rem'
             }}
             title="Statistiques"
           >
@@ -201,7 +212,7 @@ export default function Home() {
               border: `2px solid ${theme.border}`,
               borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '1.5rem'
+              fontSize: '1.3rem'
             }}
             title={darkMode ? 'Mode clair' : 'Mode sombre'}
           >
@@ -209,29 +220,23 @@ export default function Home() {
           </button>
         </div>
 
-        <h1 style={{ 
-          fontSize: 'clamp(2rem, 5vw, 4rem)', 
-          fontWeight: '800', 
-          background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          marginBottom: '1rem'
-        }}>
-          🏠 CleanHome Pro
-        </h1>
-        <p style={{ fontSize: '1.2rem', color: theme.textSecondary, marginBottom: '1rem' }}>
-          Votre assistant ménage intelligent avec <strong>{TASKS.length} tâches</strong>
+        {/* Description */}
+        <p style={{ fontSize: '1rem', color: theme.textSecondary, marginBottom: '0.75rem', textAlign: 'center' }}>
+          <strong>{TASKS.length} tâches</strong> organisées
         </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-          <p style={{ fontSize: '0.95rem', color: theme.textSecondary }}>
-            ✅ {completedTasks.size} tâches aujourd'hui
-          </p>
-          <p style={{ fontSize: '0.95rem', color: theme.textSecondary }}>
-            📅 {totalThisWeek} cette semaine
-          </p>
-          <p style={{ fontSize: '0.95rem', color: theme.textSecondary }}>
-            🔥 {streakDays} jour{streakDays > 1 ? 's' : ''} de suite
-          </p>
+
+        {/* Stats rapides */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '1rem', 
+          flexWrap: 'wrap',
+          fontSize: '0.85rem',
+          color: theme.textSecondary
+        }}>
+          <span>✅ {completedTasks.size} aujourd'hui</span>
+          <span>📅 {totalThisWeek} cette semaine</span>
+          <span>🔥 {streakDays} jour{streakDays > 1 ? 's' : ''}</span>
         </div>
       </header>
 
@@ -240,57 +245,55 @@ export default function Home() {
         <div style={{ 
           background: theme.cardBg, 
           borderRadius: '16px', 
-          padding: '2rem', 
-          marginBottom: '2rem',
+          padding: '1.5rem', 
+          marginBottom: '1rem',
           boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
           border: `1px solid ${theme.border}`
         }}>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: '700', color: theme.text, marginBottom: '1.5rem' }}>
-            📊 Statistiques - 7 derniers jours
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
+            📊 7 derniers jours
           </h2>
           
-          <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', height: '200px', gap: '0.5rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', height: '150px', gap: '0.25rem', marginBottom: '1.5rem' }}>
             {stats7Days.map((stat, idx) => (
-              <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+              <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
                 <div style={{ 
-                  fontSize: '0.85rem', 
+                  fontSize: '0.75rem', 
                   fontWeight: '600',
-                  color: theme.text,
-                  marginBottom: '0.25rem'
+                  color: theme.text
                 }}>
                   {stat.count}
                 </div>
                 <div style={{ 
                   width: '100%',
-                  height: `${(stat.count / maxCount) * 150}px`,
+                  height: `${(stat.count / maxCount) * 100}px`,
                   background: stat.count > 0 ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : theme.border,
                   borderRadius: '8px 8px 0 0',
-                  transition: 'height 0.3s ease',
                   minHeight: '10px'
                 }} />
-                <div style={{ fontSize: '0.75rem', color: theme.textSecondary, textTransform: 'capitalize' }}>
+                <div style={{ fontSize: '0.65rem', color: theme.textSecondary }}>
                   {stat.label}
                 </div>
               </div>
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-            <div style={{ background: theme.bg, padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#3b82f6' }}>{totalThisWeek}</div>
-              <div style={{ fontSize: '0.85rem', color: theme.textSecondary }}>Total semaine</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+            <div style={{ background: theme.bg, padding: '0.75rem', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>{totalThisWeek}</div>
+              <div style={{ fontSize: '0.75rem', color: theme.textSecondary }}>Semaine</div>
             </div>
-            <div style={{ background: theme.bg, padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#10b981' }}>{completedTasks.size}</div>
-              <div style={{ fontSize: '0.85rem', color: theme.textSecondary }}>Aujourd'hui</div>
+            <div style={{ background: theme.bg, padding: '0.75rem', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>{completedTasks.size}</div>
+              <div style={{ fontSize: '0.75rem', color: theme.textSecondary }}>Aujourd'hui</div>
             </div>
-            <div style={{ background: theme.bg, padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f59e0b' }}>{streakDays}</div>
-              <div style={{ fontSize: '0.85rem', color: theme.textSecondary }}>Jours de suite</div>
+            <div style={{ background: theme.bg, padding: '0.75rem', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f59e0b' }}>{streakDays}</div>
+              <div style={{ fontSize: '0.75rem', color: theme.textSecondary }}>Streak</div>
             </div>
-            <div style={{ background: theme.bg, padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#8b5cf6' }}>{history.length}</div>
-              <div style={{ fontSize: '0.85rem', color: theme.textSecondary }}>Total historique</div>
+            <div style={{ background: theme.bg, padding: '0.75rem', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#8b5cf6' }}>{history.length}</div>
+              <div style={{ fontSize: '0.75rem', color: theme.textSecondary }}>Total</div>
             </div>
           </div>
         </div>
@@ -302,15 +305,15 @@ export default function Home() {
           <div style={{ 
             background: theme.cardBg, 
             borderRadius: '16px', 
-            padding: '2rem', 
-            marginBottom: '2rem',
+            padding: '1.5rem', 
+            marginBottom: '1rem',
             boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
             border: `1px solid ${theme.border}`
           }}>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: '700', color: theme.text, marginBottom: '1.5rem' }}>
-              📍 Zones disponibles ({ZONES.length} zones)
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
+              📍 {ZONES.length} Zones
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
               {ZONES.map((zone) => {
                 const taskCount = TASKS.filter((t) => t.zone === zone).length;
                 const completedCount = TASKS.filter((t) => t.zone === zone && completedTasks.has(t.id)).length;
@@ -322,11 +325,10 @@ export default function Home() {
                     onClick={() => setSelectedZone(zone)}
                     style={{ 
                       background: `linear-gradient(135deg, ${theme.gradientFrom}, ${theme.gradientTo})`,
-                      padding: '1.5rem',
+                      padding: '1.25rem',
                       borderRadius: '12px',
                       textAlign: 'center',
                       cursor: 'pointer',
-                      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                       border: `2px solid ${theme.border}`,
                       position: 'relative',
                       overflow: 'hidden'
@@ -339,19 +341,18 @@ export default function Home() {
                         left: 0,
                         height: '4px',
                         width: `${percentage}%`,
-                        background: '#4caf50',
-                        transition: 'width 0.3s ease'
+                        background: '#4caf50'
                       }} />
                     )}
-                    <h3 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '0.5rem', color: theme.text }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.25rem', color: theme.text }}>
                       {zone}
                     </h3>
-                    <p style={{ fontSize: '1.1rem', color: theme.textSecondary, marginBottom: '0.5rem' }}>
+                    <p style={{ fontSize: '0.9rem', color: theme.textSecondary, marginBottom: '0.25rem' }}>
                       {taskCount} tâches
                     </p>
                     {percentage > 0 && (
-                      <p style={{ fontSize: '0.85rem', color: '#4caf50', fontWeight: '600' }}>
-                        {percentage}% complété
+                      <p style={{ fontSize: '0.75rem', color: '#4caf50', fontWeight: '600' }}>
+                        {percentage}%
                       </p>
                     )}
                   </div>
@@ -361,38 +362,39 @@ export default function Home() {
           </div>
 
           {/* NOTIFICATIONS */}
-          <div style={{ background: theme.cardBg, borderRadius: '16px', padding: '2rem', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: `1px solid ${theme.border}` }}>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: '700', color: theme.text, marginBottom: '1.5rem' }}>
-              🔔 Notifications Push
+          <div style={{ background: theme.cardBg, borderRadius: '16px', padding: '1.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: `1px solid ${theme.border}` }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
+              🔔 Notifications
             </h2>
             {!notificationEnabled ? (
               <button 
                 onClick={handleEnableNotifications}
                 style={{
                   width: '100%',
-                  padding: '1rem 2rem',
+                  padding: '1rem',
                   background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '12px',
-                  fontSize: '1.1rem',
+                  fontSize: '1rem',
                   fontWeight: '600',
                   cursor: 'pointer'
                 }}
               >
-                🔔 Activer les rappels quotidiens à 20h
+                🔔 Activer les rappels
               </button>
             ) : (
               <div style={{
                 background: 'linear-gradient(135deg, #c8e6c9, #a5d6a7)',
                 border: '2px solid #4caf50',
                 color: '#1b5e20',
-                padding: '1.5rem',
+                padding: '1rem',
                 borderRadius: '12px',
-                textAlign: 'center'
+                textAlign: 'center',
+                fontSize: '0.9rem'
               }}>
-                <strong>✅ Notifications activées !</strong><br/>
-                Vous recevrez vos rappels à 20h la veille de chaque tâche.
+                <strong>✅ Activées !</strong><br/>
+                Rappels à 20h la veille.
               </div>
             )}
           </div>
@@ -401,71 +403,69 @@ export default function Home() {
         <div style={{ 
           background: theme.cardBg, 
           borderRadius: '16px', 
-          padding: '2rem',
+          padding: '1.5rem',
           boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
           border: `1px solid ${theme.border}`
         }}>
           <button 
             onClick={() => setSelectedZone(null)}
             style={{
-              padding: '0.5rem 1.5rem',
+              padding: '0.5rem 1rem',
               background: theme.bg,
               color: theme.text,
               border: `2px solid ${theme.border}`,
               borderRadius: '8px',
-              fontSize: '1rem',
+              fontSize: '0.9rem',
               fontWeight: '600',
               cursor: 'pointer',
-              marginBottom: '1.5rem'
+              marginBottom: '1rem'
             }}
           >
-            ← Retour aux zones
+            ← Retour
           </button>
           
-          <div style={{ marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
-              {selectedZone} - {zoneTasks.length} tâche{zoneTasks.length > 1 ? 's' : ''}
-            </h2>
-            
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
+            {selectedZone}
+          </h2>
+          
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+            <button
+              onClick={() => setFilterFrequency('all')}
+              style={{
+                padding: '0.4rem 0.8rem',
+                background: filterFrequency === 'all' ? '#3b82f6' : theme.bg,
+                color: filterFrequency === 'all' ? 'white' : theme.text,
+                border: `2px solid ${theme.border}`,
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Toutes
+            </button>
+            {frequencies.map(freq => (
               <button
-                onClick={() => setFilterFrequency('all')}
+                key={freq}
+                onClick={() => setFilterFrequency(freq)}
                 style={{
-                  padding: '0.5rem 1rem',
-                  background: filterFrequency === 'all' ? '#3b82f6' : theme.bg,
-                  color: filterFrequency === 'all' ? 'white' : theme.text,
+                  padding: '0.4rem 0.8rem',
+                  background: filterFrequency === freq ? '#3b82f6' : theme.bg,
+                  color: filterFrequency === freq ? 'white' : theme.text,
                   border: `2px solid ${theme.border}`,
                   borderRadius: '6px',
-                  fontSize: '0.9rem',
+                  fontSize: '0.8rem',
                   fontWeight: '600',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  textTransform: 'capitalize'
                 }}
               >
-                Toutes
+                {freq}
               </button>
-              {frequencies.map(freq => (
-                <button
-                  key={freq}
-                  onClick={() => setFilterFrequency(freq)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: filterFrequency === freq ? '#3b82f6' : theme.bg,
-                    color: filterFrequency === freq ? 'white' : theme.text,
-                    border: `2px solid ${theme.border}`,
-                    borderRadius: '6px',
-                    fontSize: '0.9rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    textTransform: 'capitalize'
-                  }}
-                >
-                  {freq}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {zoneTasks.map((task) => {
               const isCompleted = completedTasks.has(task.id);
               return (
@@ -474,17 +474,16 @@ export default function Home() {
                   onClick={() => toggleTaskCompletion(task.id)}
                   style={{
                     background: isCompleted ? (darkMode ? '#1e3a1e' : '#e8f5e9') : theme.bg,
-                    padding: '1.5rem',
+                    padding: '1rem',
                     borderRadius: '12px',
                     cursor: 'pointer',
-                    border: isCompleted ? '2px solid #4caf50' : `2px solid ${theme.border}`,
-                    transition: 'all 0.3s ease'
+                    border: isCompleted ? '2px solid #4caf50' : `2px solid ${theme.border}`
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'start', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'start', gap: '0.75rem' }}>
                     <div style={{
-                      width: '24px',
-                      height: '24px',
+                      width: '22px',
+                      height: '22px',
                       borderRadius: '50%',
                       border: isCompleted ? '2px solid #4caf50' : `2px solid ${theme.border}`,
                       background: isCompleted ? '#4caf50' : 'transparent',
@@ -494,11 +493,11 @@ export default function Home() {
                       flexShrink: 0,
                       marginTop: '2px'
                     }}>
-                      {isCompleted && <span style={{ color: 'white', fontSize: '14px', fontWeight: 'bold' }}>✓</span>}
+                      {isCompleted && <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>}
                     </div>
                     <div style={{ flex: 1 }}>
                       <h3 style={{ 
-                        fontSize: '1.1rem', 
+                        fontSize: '1rem', 
                         fontWeight: '600', 
                         color: isCompleted ? '#4caf50' : theme.text,
                         textDecoration: isCompleted ? 'line-through' : 'none',
@@ -506,28 +505,27 @@ export default function Home() {
                       }}>
                         {task.name}
                       </h3>
-                      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         <span style={{
-                          padding: '0.25rem 0.75rem',
+                          padding: '0.2rem 0.6rem',
                           background: darkMode ? '#1e3a8a' : '#e3f2fd',
                           color: darkMode ? '#93c5fd' : '#1565c0',
                           borderRadius: '6px',
-                          fontSize: '0.85rem',
-                          fontWeight: '600',
-                          textTransform: 'capitalize'
+                          fontSize: '0.75rem',
+                          fontWeight: '600'
                         }}>
                           📅 {task.frequency}
                         </span>
                         {task.estimatedTime && (
                           <span style={{
-                            padding: '0.25rem 0.75rem',
+                            padding: '0.2rem 0.6rem',
                             background: darkMode ? '#7c2d12' : '#fff3e0',
                             color: darkMode ? '#fdba74' : '#e65100',
                             borderRadius: '6px',
-                            fontSize: '0.85rem',
+                            fontSize: '0.75rem',
                             fontWeight: '600'
                           }}>
-                            ⏱ {task.estimatedTime} min
+                            ⏱ {task.estimatedTime}m
                           </span>
                         )}
                       </div>
