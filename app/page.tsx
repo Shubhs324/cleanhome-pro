@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { TASKS, ZONES } from '../lib/tasksData';
-import { Task } from '../types';
+import type { Task } from '../types';
 
 function requestNotificationPermission() {
   return new Promise<boolean>((resolve) => {
-    if (!('Notification' in window)) {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
       resolve(false);
       return;
     }
@@ -30,7 +30,7 @@ export default function Home() {
   const [completedTasks, setCompletedTasks] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'granted') {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
       setNotificationEnabled(true);
     }
   }, []);
@@ -87,7 +87,7 @@ export default function Home() {
             boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
           }}>
             <h2 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#1e293b', marginBottom: '1.5rem' }}>
-              �� Zones disponibles
+              📍 Zones disponibles
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
               {ZONES.map((zone) => {
@@ -104,14 +104,6 @@ export default function Home() {
                       cursor: 'pointer',
                       transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                       border: '2px solid transparent'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-4px)';
-                      e.currentTarget.style.boxShadow = '0 10px 25px rgba(59,130,246,0.3)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
                     }}
                   >
                     <h3 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '0.5rem' }}>
