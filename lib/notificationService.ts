@@ -27,7 +27,6 @@ export function scheduleNotification(title: string, body: string, scheduledTime:
           body,
           icon: '/icons/icon-192x192.png',
           badge: '/icons/icon-72x72.png',
-          vibrate: [200, 100, 200],
           tag: 'cleanhome-task',
         });
       }, delay);

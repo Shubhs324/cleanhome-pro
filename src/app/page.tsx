@@ -1,15 +1,34 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { requestNotificationPermission } from '@/lib/notificationService';
 import { TASKS, ZONES } from '@/lib/tasksData';
+
+function requestNotificationPermission() {
+  return new Promise<boolean>((resolve) => {
+    if (!('Notification' in window)) {
+      resolve(false);
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      resolve(true);
+      return;
+    }
+    if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then((permission) => {
+        resolve(permission === 'granted');
+      });
+    } else {
+      resolve(false);
+    }
+  });
+}
 
 export default function Home() {
   const [notificationEnabled, setNotificationEnabled] = useState(false);
 
   useEffect(() => {
-    if ('Notification' in window) {
-      setNotificationEnabled(Notification.permission === 'granted');
+    if ('Notification' in window && Notification.permission === 'granted') {
+      setNotificationEnabled(true);
     }
   }, []);
 
@@ -19,49 +38,136 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-4xl mx-auto">
-        <header className="text-center py-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            🏠 CleanHome Pro
-          </h1>
-          <p className="text-gray-600">
-            Votre assistant ménage intelligent avec {TASKS.length} tâches
-          </p>
-        </header>
+    <main style={{ 
+      padding: '2rem 1rem', 
+      maxWidth: '1200px', 
+      margin: '0 auto',
+      background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+      minHeight: '100vh'
+    }}>
+      <header style={{ textAlign: 'center', padding: '2rem 0' }}>
+        <h1 style={{ 
+          fontSize: 'clamp(2rem, 5vw, 4rem)', 
+          fontWeight: '800', 
+          background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          marginBottom: '1rem'
+        }}>
+          🏠 CleanHome Pro
+        </h1>
+        <p style={{ fontSize: '1.2rem', color: '#64748b', marginBottom: '3rem' }}>
+          Votre assistant ménage intelligent avec <strong>{TASKS.length} tâches</strong>
+        </p>
+      </header>
 
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4">Zones disponibles</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {ZONES.map((zone) => (
-              <div
-                key={zone}
-                className="bg-blue-100 rounded-lg p-4 text-center hover:bg-blue-200 transition cursor-pointer"
+      <div style={{ 
+        background: 'white', 
+        borderRadius: '16px', 
+        padding: '2rem', 
+        marginBottom: '2rem',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ 
+          fontSize: '1.75rem', 
+          fontWeight: '700', 
+          color: '#1e293b', 
+          marginBottom: '1.5rem' 
+        }}>
+          📍 Zones disponibles
+        </h2>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gap: '1.5rem' 
+        }}>
+          {ZONES.map((zone) => {
+            const taskCount = TASKS.filter((t) => t.zone === zone).length;
+            return (
+              <div key={zone} style={{ 
+                background: 'linear-gradient(135deg, #e3f2fd, #bbdefb)',
+                padding: '1.5rem',
+                borderRadius: '12px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                border: '2px solid transparent'
+              }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 10px 25px rgba(59,130,246,0.3)';
+                  e.currentTarget.style.borderColor = '#3b82f6';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }}
               >
-                <p className="font-medium text-gray-800">{zone}</p>
-                <p className="text-sm text-gray-600">
-                  {TASKS.filter((t) => t.zone === zone).length} tâches
+                <h3 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+                  {zone}
+                </h3>
+                <p style={{ fontSize: '1.1rem', color: '#475569' }}>
+                  {taskCount} tâches
                 </p>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
+      </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">Notifications</h2>
-          {!notificationEnabled ? (
-            <button
-              onClick={handleEnableNotifications}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition"
-            >
-              🔔 Activer les rappels quotidiens
-            </button>
-          ) : (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-              ✅ Notifications activées ! Vous recevrez vos rappels à 20h.
-            </div>
-          )}
-        </div>
+      <div style={{ 
+        background: 'white', 
+        borderRadius: '16px', 
+        padding: '2rem',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ 
+          fontSize: '1.75rem', 
+          fontWeight: '700', 
+          color: '#1e293b', 
+          marginBottom: '1.5rem' 
+        }}>
+          🔔 Notifications
+        </h2>
+        {!notificationEnabled ? (
+          <button 
+            onClick={handleEnableNotifications}
+            style={{
+              width: '100%',
+              padding: '1rem 2rem',
+              background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '1.1rem',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 10px 25px rgba(59,130,246,0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            Activer les rappels quotidiens
+          </button>
+        ) : (
+          <div style={{
+            background: 'linear-gradient(135deg, #c8e6c9, #a5d6a7)',
+            border: '2px solid #4caf50',
+            color: '#1b5e20',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            textAlign: 'center'
+          }}>
+            <strong>✅ Notifications activées !</strong><br/>
+            Vous recevrez vos rappels à 20h la veille.
+          </div>
+        )}
       </div>
     </main>
   );
