@@ -295,7 +295,7 @@ useEffect(() => {
   // Écouter les changements des membres
   const unsubMembers = firebase.listenToData('members', (data) => {
     if (data) {
-      const membersArray = Object.values(data);
+      const membersArray = Object.values(data) as FamilyMember[]; // ← Ajoute le cast
       // Éviter la boucle : ne met à jour que si différent
       if (JSON.stringify(membersArray) !== JSON.stringify(familyMembers)) {
         setFamilyMembers(membersArray);
@@ -306,7 +306,7 @@ useEffect(() => {
   // Écouter l'historique
   const unsubHistory = firebase.listenToData('history', (data) => {
     if (data) {
-      const historyArray = Object.values(data);
+      const historyArray = Object.values(data) as CompletedTask[]; // ← Ajoute le cast
       if (JSON.stringify(historyArray) !== JSON.stringify(history)) {
         setHistory(historyArray);
       }
@@ -316,7 +316,7 @@ useEffect(() => {
   // Écouter les assignments
   const unsubAssignments = firebase.listenToData('assignments', (data) => {
     if (data) {
-      const assignmentsArray = Object.values(data);
+      const assignmentsArray = Object.values(data) as TaskAssignment[]; // ← Ajoute le cast
       if (JSON.stringify(assignmentsArray) !== JSON.stringify(taskAssignments)) {
         setTaskAssignments(assignmentsArray);
       }
@@ -329,23 +329,6 @@ useEffect(() => {
     unsubAssignments?.();
   };
 }, [firebase.isConnected]); // ← Dépend SEULEMENT de la connexion
-
-// Sync vers Firebase QUAND les données changent localement
-useEffect(() => {
-  if (!firebase.isConnected || familyMembers.length === 0) return;
-  firebase.syncData('members', familyMembers);
-}, [familyMembers.length]); // ← Seulement si nombre change
-
-useEffect(() => {
-  if (!firebase.isConnected || history.length === 0) return;
-  firebase.syncData('history', history);
-}, [history.length]);
-
-useEffect(() => {
-  if (!firebase.isConnected || taskAssignments.length === 0) return;
-  firebase.syncData('assignments', taskAssignments);
-}, [taskAssignments.length]);
-
 
 
   useEffect(() => {
