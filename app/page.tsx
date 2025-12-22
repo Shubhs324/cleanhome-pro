@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { TASKS, ZONES } from '../lib/tasksData';
+import { TUTORIALS, getTutorialByTaskId, getTutorialsByZone, type Tutorial } from '../lib/tutorialsData';
 import { getScheduledTasksForMonth, getTasksForDate, ScheduledTask } from '../lib/calendarUtils';
 import {
   BADGES,
@@ -90,6 +91,9 @@ export default function Home() {
   const [showAddTask, setShowAddTask] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('all');
   const [newTask, setNewTask] = useState({ name: '', zone: 'Cuisine', frequency: 'quotidienne', estimatedTime: 10, description: '' });
+  const [showTutorials, setShowTutorials] = useState(false);
+  const [selectedTutorial, setSelectedTutorial] = useState<Tutorial | null>(null);
+  const [tutorialZoneFilter, setTutorialZoneFilter] = useState<string>('all');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -426,6 +430,20 @@ export default function Home() {
     setCustomTasks(customTasks.filter(t => t.id !== taskId));
     setCompletedTasks(prev => { const newSet = new Set(prev); newSet.delete(taskId); return newSet; });
     setHistory(prev => prev.filter(h => h.taskId !== taskId));
+  };
+
+  const openTutorialForTask = (taskId: number) => {
+    const tutorial = getTutorialByTaskId(taskId);
+    if (tutorial) {
+      setSelectedTutorial(tutorial);
+      setShowTutorials(true);
+    } else {
+      const task = allTasks.find(t => t.id === taskId);
+      if (task) {
+        setTutorialZoneFilter(task.zone);
+        setShowTutorials(true);
+      }
+    }
   };
 
   const TEMPLATES = {
@@ -827,6 +845,7 @@ export default function Home() {
             onClick={() => {
               setShowFamily(!showFamily);
               setShowGamification(false);
+            setShowTutorials(false);
               setShowCalendar(false);
               setShowStats(false);
             }}
@@ -849,6 +868,7 @@ export default function Home() {
               setShowStats(false);
               setShowFamily(false);
               setShowGamification(false);
+            setShowTutorials(false);
             }}
             style={{
               padding: '0.5rem 1rem',
@@ -869,6 +889,7 @@ export default function Home() {
               setShowCalendar(false);
               setShowFamily(false);
               setShowGamification(false);
+            setShowTutorials(false);
             }}
             style={{
               padding: '0.5rem 1rem',
@@ -883,6 +904,27 @@ export default function Home() {
           >
             📊
           </button>
+        <button
+          onClick={() => {
+            setShowTutorials(!showTutorials);
+            setShowStats(false);
+            setShowCalendar(false);
+            setShowFamily(false);
+            setShowGamification(false);
+          }}
+          style={{
+            padding: '0.5rem 1rem',
+            background: showTutorials ? '#3b82f6' : theme.cardBg,
+            color: showTutorials ? 'white' : theme.text,
+            border: `2px solid ${theme.border}`,
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '1.3rem',
+          }}
+          title="Tutoriels & Aide"
+        >
+          🎥
+        </button>
           <button
             onClick={() => setDarkMode(!darkMode)}
             style={{
@@ -1679,6 +1721,109 @@ export default function Home() {
               <div style={{ fontSize: '0.75rem', color: theme.textSecondary }}>Total</div>
             </div>
           </div>
+        </div>
+      )}
+
+
+      {/* TUTORIELS & AIDE */}
+      {showTutorials && (
+        <div style={{ background: theme.cardBg, borderRadius: '16px', padding: '1.5rem', marginBottom: '1rem', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: `1px solid ${theme.border}` }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
+            🎥 Tutoriels & Aide
+          </h2>
+
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ fontSize: '0.85rem', color: theme.textSecondary, marginBottom: '0.5rem' }}>Filtrer par zone :</div>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button onClick={() => setTutorialZoneFilter('all')} style={{ padding: '0.4rem 0.8rem', background: tutorialZoneFilter === 'all' ? '#3b82f6' : theme.bg, color: tutorialZoneFilter === 'all' ? 'white' : theme.text, border: `2px solid ${theme.border}`, borderRadius: '6px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}>
+                Toutes
+              </button>
+              {ZONES.map(zone => (
+                <button key={zone} onClick={() => setTutorialZoneFilter(zone)} style={{ padding: '0.4rem 0.8rem', background: tutorialZoneFilter === zone ? '#3b82f6' : theme.bg, color: tutorialZoneFilter === zone ? 'white' : theme.text, border: `2px solid ${theme.border}`, borderRadius: '6px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer' }}>
+                  {zone}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {TUTORIALS.filter(tuto => tutorialZoneFilter === 'all' || tuto.zone === tutorialZoneFilter || tuto.zone === 'Toutes').map(tutorial => (
+              <div key={tutorial.id} style={{ background: theme.bg, borderRadius: '12px', padding: '1.5rem', border: `2px solid ${theme.border}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: theme.text, margin: 0 }}>
+                    {tutorial.title}
+                  </h3>
+                  <span style={{ padding: '0.25rem 0.75rem', background: '#3b82f6', color: 'white', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600' }}>
+                    {tutorial.zone}
+                  </span>
+                </div>
+
+                {tutorial.youtubeUrl && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <a href={tutorial.youtubeUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', background: '#ff0000', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', fontSize: '0.9rem' }}>
+                      <span style={{ fontSize: '1.5rem' }}>▶️</span>
+                      Voir le tutoriel vidéo
+                    </a>
+                  </div>
+                )}
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '600', color: theme.text, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    💡 Astuces
+                  </h4>
+                  <ul style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    {tutorial.tips.map((tip, idx) => (
+                      <li key={idx} style={{ color: theme.text, fontSize: '0.9rem', lineHeight: '1.5' }}>
+                        {tip}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '600', color: theme.text, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    🧴 Produits recommandés
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {tutorial.recommendedProducts.map((product, idx) => (
+                      <div key={idx} style={{ padding: '0.75rem', background: theme.cardBg, borderRadius: '8px', border: `1px solid ${theme.border}` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.25rem' }}>
+                          <span style={{ fontWeight: '600', color: theme.text, fontSize: '0.9rem' }}>{product.name}</span>
+                          <span style={{ padding: '0.2rem 0.5rem', background: '#10b981', color: 'white', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '600' }}>
+                            {product.type}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: theme.textSecondary, fontStyle: 'italic' }}>
+                          → {product.why}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {tutorial.safetyWarnings.length > 0 && (
+                  <div style={{ padding: '1rem', background: '#fef2f2', borderLeft: '4px solid #ef4444', borderRadius: '8px' }}>
+                    <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#991b1b', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      ⚠️ Sécurité
+                    </h4>
+                    <ul style={{ margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      {tutorial.safetyWarnings.map((warning, idx) => (
+                        <li key={idx} style={{ color: '#991b1b', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                          {warning}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {TUTORIALS.filter(tuto => tutorialZoneFilter === 'all' || tuto.zone === tutorialZoneFilter || tuto.zone === 'Toutes').length === 0 && (
+            <div style={{ padding: '2rem', textAlign: 'center', color: theme.textSecondary }}>
+              Aucun tutoriel disponible pour cette zone. 🚧 Plus de tutoriels bientôt !
+            </div>
+          )}
         </div>
       )}
 
