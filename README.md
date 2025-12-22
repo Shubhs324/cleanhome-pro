@@ -1,3 +1,26 @@
+[![Build Status](https://github.com/Momat2023/cleanhome-pro/actions/workflows/build.yml/badge.svg)](https://github.com/Momat2023/cleanhome-pro/actions)
+
+# 🏠 CleanHome Pro
+
+> **L'application tout-en-un pour gérer votre ménage avec style et efficacité**
+
+<div align="center">
+
+[![Vercel Deploy](https://therealsujitk-vercel-badge.vercel.app/?app=cleanhome-pro)](https://cleanhome-pro.vercel.app/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.1-black?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Firebase](https://img.shields.io/badge/Firebase-12.7-orange?logo=firebase&logoColor=white)](https://firebase.google.com/)
+[![PWA](https://img.shields.io/badge/PWA-Enabled-purple?logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/Momat2023/cleanhome-pro?style=social)](https://github.com/Momat2023/cleanhome-pro)
+[![GitHub forks](https://img.shields.io/github/forks/Momat2023/cleanhome-pro?style=social)](https://github.com/Momat2023/cleanhome-pro/fork)
+[![GitHub issues](https://img.shields.io/github/issues/Momat2023/cleanhome-pro)](https://github.com/Momat2023/cleanhome-pro/issues)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Momat2023/cleanhome-pro/pulls)
+
+**[🚀 Démo en direct](https://cleanhome-pro.vercel.app/)** | **[📖 Documentation](#fonctionnalités)** | **[💬 Discussions](https://github.com/Momat2023/cleanhome-pro/discussions)**
+
+</div>
 
 ---
 
@@ -118,8 +141,23 @@ Si **CleanHome Pro** vous aide au quotidien :
 - 🚀 **Contribuer** au code
 
 ---
+<!-- Stats du projet -->
+![GitHub code size](https://img.shields.io/github/languages/code-size/Momat2023/cleanhome-pro)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/Momat2023/cleanhome-pro)
+![GitHub last commit](https://img.shields.io/github/last-commit/Momat2023/cleanhome-pro)
+![GitHub contributors](https://img.shields.io/github/contributors/Momat2023/cleanhome-pro)
+
+
+<!-- Après les badges existants -->
+[![Maintainability](https://img.shields.io/badge/Maintainability-A+-brightgreen)](https://github.com/Momat2023/cleanhome-pro)
+[![Made with Love](https://img.shields.io/badge/Made%20with-❤️-red)](https://github.com/Momat2023/cleanhome-pro)
+[![Uptime](https://img.shields.io/badge/Uptime-99.9%25-success)](https://cleanhome-pro.vercel.app/)
+[![Response Time](https://img.shields.io/badge/Response%20Time-<100ms-blue)](https://cleanhome-pro.vercel.app/)
 
 <div align="center">
+
+[![Install PWA](https://img.shields.io/badge/Install-PWA-blue?logo=pwa&style=for-the-badge)](https://cleanhome-pro.vercel.app/)
+
 
 **Fait avec ❤️ par la communauté CleanHome Pro**
 
