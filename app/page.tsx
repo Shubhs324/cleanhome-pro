@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { TASKS, ZONES } from '../lib/tasksData';
 import { TUTORIALS, getTutorialByTaskId, getTutorialsByZone, type Tutorial } from '../lib/tutorialsData';
 import { getScheduledTasksForMonth, getTasksForDate, ScheduledTask } from '../lib/calendarUtils';
+import { useFirebaseFamily } from '@/hooks/useFirebaseFamily';
+import FamilyConnectionModal from '@/components/FamilyConnectionModal';
 import {
   BADGES,
   LEVELS,
@@ -94,6 +96,11 @@ export default function Home() {
   const [showTutorials, setShowTutorials] = useState(false);
   const [selectedTutorial, setSelectedTutorial] = useState<Tutorial | null>(null);
   const [tutorialZoneFilter, setTutorialZoneFilter] = useState<string>('all');
+  
+  // Firebase Family Sync
+  const firebase = useFirebaseFamily();
+  const [showFamilyModal, setShowFamilyModal] = useState(!firebase.isConnected);
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -280,6 +287,66 @@ export default function Home() {
       localStorage.setItem('unlocked-badges', JSON.stringify(unlockedBadges));
     }
   }, [unlockedBadges]);
+  
+// Synchronisation Firebase - ÉCOUTE SEULEMENT (pas de sync automatique)
+useEffect(() => {
+  if (!firebase.isConnected) return;
+
+  // Écouter les changements des membres
+  const unsubMembers = firebase.listenToData('members', (data) => {
+    if (data) {
+      const membersArray = Object.values(data);
+      // Éviter la boucle : ne met à jour que si différent
+      if (JSON.stringify(membersArray) !== JSON.stringify(familyMembers)) {
+        setFamilyMembers(membersArray);
+      }
+    }
+  });
+
+  // Écouter l'historique
+  const unsubHistory = firebase.listenToData('history', (data) => {
+    if (data) {
+      const historyArray = Object.values(data);
+      if (JSON.stringify(historyArray) !== JSON.stringify(history)) {
+        setHistory(historyArray);
+      }
+    }
+  });
+
+  // Écouter les assignments
+  const unsubAssignments = firebase.listenToData('assignments', (data) => {
+    if (data) {
+      const assignmentsArray = Object.values(data);
+      if (JSON.stringify(assignmentsArray) !== JSON.stringify(taskAssignments)) {
+        setTaskAssignments(assignmentsArray);
+      }
+    }
+  });
+
+  return () => {
+    unsubMembers?.();
+    unsubHistory?.();
+    unsubAssignments?.();
+  };
+}, [firebase.isConnected]); // ← Dépend SEULEMENT de la connexion
+
+// Sync vers Firebase QUAND les données changent localement
+useEffect(() => {
+  if (!firebase.isConnected || familyMembers.length === 0) return;
+  firebase.syncData('members', familyMembers);
+}, [familyMembers.length]); // ← Seulement si nombre change
+
+useEffect(() => {
+  if (!firebase.isConnected || history.length === 0) return;
+  firebase.syncData('history', history);
+}, [history.length]);
+
+useEffect(() => {
+  if (!firebase.isConnected || taskAssignments.length === 0) return;
+  firebase.syncData('assignments', taskAssignments);
+}, [taskAssignments.length]);
+
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -940,6 +1007,26 @@ export default function Home() {
           >
             {darkMode ? '☀️' : '🌙'}
           </button>
+			<button
+			  onClick={() => {
+				console.log('🔥 Bouton cliqué !');
+				setShowFamilyModal(true);
+			  }}
+			  style={{
+				padding: '0.5rem 1rem',
+				background: firebase.isConnected ? '#10b981' : '#f59e0b',
+				color: 'white',
+				border: 'none',
+				borderRadius: '8px',
+				cursor: 'pointer',
+				fontSize: '1.3rem',
+			  }}
+			  title={firebase.isConnected ? `Famille: ${firebase.familyCode}` : 'Connecter famille'}
+			>
+			  {firebase.isConnected ? '🔗' : '⚠️'}
+			</button>
+
+
           <button
             style={{
               padding: '0.5rem 1rem',
@@ -2369,6 +2456,14 @@ export default function Home() {
             })}
           </div>
         </div>
+      )}
+	        {/* 🆕 Modale connexion famille Firebase */}
+      {showFamilyModal && !firebase.isConnected && (
+        <FamilyConnectionModal
+          onCreateFamily={firebase.createFamily}
+          onJoinFamily={firebase.joinFamily}
+          onClose={() => setShowFamilyModal(false)}
+        />
       )}
     </main>
   );
