@@ -2441,7 +2441,7 @@ useEffect(() => {
         </div>
       )}
 	        {/* 🆕 Modale connexion famille Firebase */}
-      {showFamilyModal && !firebase.isConnected && (
+      {showFamilyModal && (
         <FamilyConnectionModal
           onCreateFamily={firebase.createFamily}
           onJoinFamily={firebase.joinFamily}
