@@ -119,17 +119,6 @@ Si **CleanHome Pro** vous aide au quotidien :
 
 ---
 
-## 📞 Support
-
-Besoin d'aide ? Plusieurs options :
-
-- 📖 [Documentation complète](https://github.com/VOTRE-USERNAME/cleanhome-pro/wiki)
-- 💬 [Discussions GitHub](https://github.com/VOTRE-USERNAME/cleanhome-pro/discussions)
-- 🐛 [Signaler un bug](https://github.com/VOTRE-USERNAME/cleanhome-pro/issues)
-- 📧 Email : support@cleanhome-pro.com
-
----
-
 <div align="center">
 
 **Fait avec ❤️ par la communauté CleanHome Pro**
