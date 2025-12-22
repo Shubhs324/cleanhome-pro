@@ -3,17 +3,17 @@
 import { useEffect, useState } from 'react';
 import { TASKS, ZONES } from '../lib/tasksData';
 import { getScheduledTasksForMonth, getTasksForDate, ScheduledTask } from '../lib/calendarUtils';
-import { 
-  BADGES, 
-  LEVELS, 
-  generateWeeklyChallenges, 
-  calculatePoints, 
-  getCurrentLevel, 
-  getNextLevel, 
+import {
+  BADGES,
+  LEVELS,
+  generateWeeklyChallenges,
+  calculatePoints,
+  getCurrentLevel,
+  getNextLevel,
   getProgressToNextLevel,
   checkBadgeUnlocked,
   type Badge,
-  type Challenge
+  type Challenge,
 } from '../lib/gamification';
 import type { FamilyMember, TaskAssignment, TaskComment } from '../types';
 
@@ -62,7 +62,7 @@ export default function Home() {
   const [isOnline, setIsOnline] = useState(true);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  
+
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -87,10 +87,10 @@ export default function Home() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setIsOnline(navigator.onLine);
-      
+
       const handleOnline = () => setIsOnline(true);
       const handleOffline = () => setIsOnline(false);
-      
+
       window.addEventListener('online', handleOnline);
       window.addEventListener('offline', handleOffline);
 
@@ -163,9 +163,10 @@ export default function Home() {
       }
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('✅ Service Worker enregistré'))
-          .catch(err => console.log('❌ Service Worker erreur:', err));
+        navigator
+          .serviceWorker.register('/sw.js')
+          .then((reg) => console.log('✅ Service Worker enregistré'))
+          .catch((err) => console.log('❌ Service Worker erreur:', err));
       }
 
       return () => {
@@ -182,6 +183,17 @@ export default function Home() {
     const diff = now.getTime() - start.getTime();
     const oneWeek = 1000 * 60 * 60 * 24 * 7;
     return `${now.getFullYear()}-W${Math.floor(diff / oneWeek)}`;
+  };
+
+  // Début de semaine (lundi)
+  const getWeekStart = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = dimanche
+    const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - diff);
+    weekStart.setHours(0, 0, 0, 0);
+    return weekStart;
   };
 
   const handleInstallClick = async () => {
@@ -207,15 +219,17 @@ export default function Home() {
     }
   }, [completedTasks]);
 
+  // Historiques + points + badges
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('tasks-history', JSON.stringify(history));
-      
-      const points = history.reduce((sum, task) => sum + (task.points || 0), 0);
-      setTotalPoints(points);
-      localStorage.setItem('total-points', points.toString());
-      
-      checkForNewBadges();
+
+      const calculatedPoints = history.reduce((sum, task) => sum + (task.points || 0), 0);
+      setTotalPoints(calculatedPoints);
+      localStorage.setItem('total-points', calculatedPoints.toString());
+
+      // Vérif badges avec la valeur calculée
+      checkForNewBadges(calculatedPoints);
       updateMemberPoints();
     }
   }, [history]);
@@ -270,7 +284,7 @@ export default function Home() {
     let streak = 0;
     const days = getLast7Days().reverse();
     for (const date of days) {
-      if (history.some(h => h.date === date)) {
+      if (history.some((h) => h.date === date)) {
         streak++;
       } else {
         break;
@@ -279,16 +293,17 @@ export default function Home() {
     return streak;
   })();
 
+  // Badges avec points passés en argument
   const checkForNewBadges = (currentPoints: number) => {
     const stats = {
       totalTasks: history.length,
       totalPoints: currentPoints,
-      currentStreak: streakDays
+      currentStreak: streakDays,
     };
 
-    BADGES.forEach(badge => {
+    BADGES.forEach((badge) => {
       if (!unlockedBadges.includes(badge.id) && checkBadgeUnlocked(badge, stats)) {
-        setUnlockedBadges(prev => [...prev, badge.id]);
+        setUnlockedBadges((prev) => [...prev, badge.id]);
         setNewBadgeUnlocked(badge);
         setTimeout(() => setNewBadgeUnlocked(null), 5000);
       }
@@ -296,9 +311,9 @@ export default function Home() {
   };
 
   const updateMemberPoints = () => {
-    setFamilyMembers(prev => {
-      return prev.map(member => {
-        const memberTasks = history.filter(h => h.memberId === member.id);
+    setFamilyMembers((prev) => {
+      return prev.map((member) => {
+        const memberTasks = history.filter((h) => h.memberId === member.id);
         const points = memberTasks.reduce((sum, task) => sum + (task.points || 0), 0);
         return { ...member, points };
       });
@@ -307,58 +322,63 @@ export default function Home() {
 
   const addFamilyMember = () => {
     if (!newMemberName.trim()) return;
-    
+
     const newMember: FamilyMember = {
       id: Date.now().toString(),
       name: newMemberName.trim(),
       color: DEFAULT_COLORS[familyMembers.length % DEFAULT_COLORS.length],
       avatar: DEFAULT_AVATARS[familyMembers.length % DEFAULT_AVATARS.length],
-      points: 0
+      points: 0,
     };
-    
+
     setFamilyMembers([...familyMembers, newMember]);
     setNewMemberName('');
     setShowAddMember(false);
-    
+
     if (!currentMemberId) {
       setCurrentMemberId(newMember.id);
     }
   };
 
   const removeFamilyMember = (memberId: string) => {
-    setFamilyMembers(familyMembers.filter(m => m.id !== memberId));
-    setTaskAssignments(taskAssignments.filter(a => a.memberId !== memberId));
+    setFamilyMembers(familyMembers.filter((m) => m.id !== memberId));
+    setTaskAssignments(taskAssignments.filter((a) => a.memberId !== memberId));
     if (currentMemberId === memberId) {
       setCurrentMemberId(familyMembers[0]?.id || null);
     }
   };
 
   const assignTaskToMember = (taskId: number, memberId: string) => {
-    const existing = taskAssignments.find(a => a.taskId === taskId);
+    const existing = taskAssignments.find((a) => a.taskId === taskId);
     if (existing) {
-      setTaskAssignments(taskAssignments.map(a => 
-        a.taskId === taskId ? { ...a, memberId, assignedAt: new Date().toISOString() } : a
-      ));
+      setTaskAssignments(
+        taskAssignments.map((a) =>
+          a.taskId === taskId ? { ...a, memberId, assignedAt: new Date().toISOString() } : a,
+        ),
+      );
     } else {
-      setTaskAssignments([...taskAssignments, {
-        taskId,
-        memberId,
-        assignedAt: new Date().toISOString()
-      }]);
+      setTaskAssignments([
+        ...taskAssignments,
+        {
+          taskId,
+          memberId,
+          assignedAt: new Date().toISOString(),
+        },
+      ]);
     }
   };
 
   const addComment = (taskId: number) => {
     if (!newComment.trim() || !currentMemberId) return;
-    
+
     const comment: TaskComment = {
       id: Date.now().toString(),
       taskId,
       memberId: currentMemberId,
       comment: newComment.trim(),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
-    
+
     setTaskComments([...taskComments, comment]);
     setNewComment('');
     setSelectedTaskForComment(null);
@@ -372,23 +392,26 @@ export default function Home() {
   const toggleTaskCompletion = (taskId: number) => {
     const today = new Date().toISOString().split('T')[0];
     const now = new Date().toISOString();
-    const task = TASKS.find(t => t.id === taskId);
+    const task = TASKS.find((t) => t.id === taskId);
     const points = calculatePoints(task?.estimatedTime);
-    
-    setCompletedTasks(prev => {
+
+    setCompletedTasks((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(taskId)) {
         newSet.delete(taskId);
-        setHistory(h => h.filter(item => !(item.taskId === taskId && item.date === today)));
+        setHistory((h) => h.filter((item) => !(item.taskId === taskId && item.date === today)));
       } else {
         newSet.add(taskId);
-        setHistory(h => [...h, { 
-          taskId, 
-          completedAt: now, 
-          date: today, 
-          memberId: currentMemberId || undefined,
-          points
-        }]);
+        setHistory((h) => [
+          ...h,
+          {
+            taskId,
+            completedAt: now,
+            date: today,
+            memberId: currentMemberId || undefined,
+            points,
+          },
+        ]);
       }
       return newSet;
     });
@@ -396,27 +419,30 @@ export default function Home() {
 
   const toggleTaskCompletionForDate = (taskId: number, date: string) => {
     const now = new Date().toISOString();
-    const task = TASKS.find(t => t.id === taskId);
+    const task = TASKS.find((t) => t.id === taskId);
     const points = calculatePoints(task?.estimatedTime);
-    
-    setHistory(prev => {
-      const existing = prev.find(h => h.taskId === taskId && h.date === date);
+
+    setHistory((prev) => {
+      const existing = prev.find((h) => h.taskId === taskId && h.date === date);
       if (existing) {
-        return prev.filter(item => !(item.taskId === taskId && item.date === date));
+        return prev.filter((item) => !(item.taskId === taskId && item.date === date));
       } else {
-        return [...prev, { 
-          taskId, 
-          completedAt: now, 
-          date, 
-          memberId: currentMemberId || undefined,
-          points
-        }];
+        return [
+          ...prev,
+          {
+            taskId,
+            completedAt: now,
+            date,
+            memberId: currentMemberId || undefined,
+            points,
+          },
+        ];
       }
     });
 
     const today = new Date().toISOString().split('T')[0];
     if (date === today) {
-      setCompletedTasks(prev => {
+      setCompletedTasks((prev) => {
         const newSet = new Set(prev);
         if (newSet.has(taskId)) {
           newSet.delete(taskId);
@@ -430,15 +456,15 @@ export default function Home() {
 
   const getStatsForLast7Days = () => {
     const days = getLast7Days();
-    return days.map(date => ({
+    return days.map((date) => ({
       date,
-      count: history.filter(h => h.date === date).length,
-      label: new Date(date).toLocaleDateString('fr-FR', { weekday: 'short' })
+      count: history.filter((h) => h.date === date).length,
+      label: new Date(date).toLocaleDateString('fr-FR', { weekday: 'short' }),
     }));
   };
 
   const stats7Days = getStatsForLast7Days();
-  const maxCount = Math.max(...stats7Days.map(s => s.count), 1);
+  const maxCount = Math.max(...stats7Days.map((s) => s.count), 1);
   const totalThisWeek = stats7Days.reduce((sum, s) => sum + s.count, 0);
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -463,15 +489,28 @@ export default function Home() {
     }
   };
 
-  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const monthNames = [
+    'Janvier',
+    'Février',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juillet',
+    'Août',
+    'Septembre',
+    'Octobre',
+    'Novembre',
+    'Décembre',
+  ];
   const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
   const today = new Date().toISOString().split('T')[0];
   const selectedDateTasks = selectedDate ? getTasksForDate(selectedDate, scheduledTasks) : [];
 
-  let zoneTasks = selectedZone ? TASKS.filter(t => t.zone === selectedZone) : [];
+  let zoneTasks = selectedZone ? TASKS.filter((t) => t.zone === selectedZone) : [];
   if (filterFrequency !== 'all') {
-    zoneTasks = zoneTasks.filter(t => t.frequency === filterFrequency);
+    zoneTasks = zoneTasks.filter((t) => t.frequency === filterFrequency);
   }
 
   const frequencies = ['quotidienne', 'hebdomadaire', 'mensuelle', 'saisonnière', 'annuelle', 'trimestrielle'];
@@ -492,77 +531,79 @@ export default function Home() {
   const progressToNext = getProgressToNextLevel(totalPoints);
 
   return (
-    <main style={{ 
-      padding: '1rem', 
-      maxWidth: '1200px', 
-      margin: '0 auto',
-      minHeight: '100vh',
-      background: theme.bg,
-      transition: 'background 0.3s ease'
-    }}>
+    <main
+      style={{
+        padding: '1rem',
+        maxWidth: '1200px',
+        margin: '0 auto',
+        minHeight: '100vh',
+        background: theme.bg,
+        transition: 'background 0.3s ease',
+      }}
+    >
       {newBadgeUnlocked && (
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-          color: 'white',
-          padding: '2rem',
-          borderRadius: '20px',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-          zIndex: 10000,
-          textAlign: 'center',
-          minWidth: '300px'
-        }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+            color: 'white',
+            padding: '2rem',
+            borderRadius: '20px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+            zIndex: 10000,
+            textAlign: 'center',
+            minWidth: '300px',
+          }}
+        >
           <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>{newBadgeUnlocked.icon}</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
-            Nouveau Badge Débloqué !
-          </div>
-          <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>
-            {newBadgeUnlocked.name}
-          </div>
-          <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>
-            {newBadgeUnlocked.description}
-          </div>
+          <div style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>Nouveau Badge Débloqué !</div>
+          <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>{newBadgeUnlocked.name}</div>
+          <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>{newBadgeUnlocked.description}</div>
         </div>
       )}
 
       {!isOnline && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          background: '#f59e0b',
-          color: 'white',
-          padding: '0.75rem',
-          textAlign: 'center',
-          fontWeight: '600',
-          fontSize: '0.9rem',
-          zIndex: 9999,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
-        }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            background: '#f59e0b',
+            color: 'white',
+            padding: '0.75rem',
+            textAlign: 'center',
+            fontWeight: '600',
+            fontSize: '0.9rem',
+            zIndex: 9999,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+          }}
+        >
           📡 Mode hors-ligne - Vos données sont sauvegardées localement
         </div>
       )}
 
       {showInstallPrompt && (
-        <div style={{
-          position: 'fixed',
-          bottom: '1rem',
-          left: '1rem',
-          right: '1rem',
-          background: theme.cardBg,
-          border: `2px solid ${theme.border}`,
-          borderRadius: '12px',
-          padding: '1rem',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-          zIndex: 9998,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.75rem'
-        }}>
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '1rem',
+            left: '1rem',
+            right: '1rem',
+            background: theme.cardBg,
+            border: `2px solid ${theme.border}`,
+            borderRadius: '12px',
+            padding: '1rem',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+            zIndex: 9998,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
               <div style={{ fontWeight: '700', fontSize: '1rem', color: theme.text, marginBottom: '0.5rem' }}>
@@ -580,7 +621,7 @@ export default function Home() {
                 color: theme.textSecondary,
                 fontSize: '1.5rem',
                 cursor: 'pointer',
-                padding: 0
+                padding: 0,
               }}
             >
               ×
@@ -597,7 +638,7 @@ export default function Home() {
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: '600',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               Installer
@@ -612,7 +653,7 @@ export default function Home() {
                 border: `2px solid ${theme.border}`,
                 borderRadius: '8px',
                 fontWeight: '600',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               Plus tard
@@ -622,27 +663,31 @@ export default function Home() {
       )}
 
       <header style={{ padding: !isOnline ? '3rem 1rem 1rem' : '1rem 0', marginBottom: '1rem' }}>
-        <h1 style={{ 
-          fontSize: 'clamp(1.8rem, 7vw, 4rem)', 
-          fontWeight: '800', 
-          background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          marginBottom: '0.5rem',
-          textAlign: 'center',
-          lineHeight: '1.2'
-        }}>
+        <h1
+          style={{
+            fontSize: 'clamp(1.8rem, 7vw, 4rem)',
+            fontWeight: '800',
+            background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            marginBottom: '0.5rem',
+            textAlign: 'center',
+            lineHeight: '1.2',
+          }}
+        >
           🏠 CleanHome Pro
         </h1>
 
-        <div style={{
-          background: `linear-gradient(135deg, ${currentLevel.color}, ${currentLevel.color}dd)`,
-          color: 'white',
-          padding: '1rem',
-          borderRadius: '12px',
-          marginBottom: '1rem',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-        }}>
+        <div
+          style={{
+            background: `linear-gradient(135deg, ${currentLevel.color}, ${currentLevel.color}dd)`,
+            color: 'white',
+            padding: '1rem',
+            borderRadius: '12px',
+            marginBottom: '1rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span style={{ fontSize: '2rem' }}>{currentLevel.icon}</span>
@@ -658,13 +703,22 @@ export default function Home() {
           </div>
           {nextLevel && (
             <>
-              <div style={{ background: 'rgba(255,255,255,0.2)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ 
-                  background: 'white', 
-                  height: '100%', 
-                  width: `${progressToNext}%`,
-                  transition: 'width 0.5s ease'
-                }} />
+              <div
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  height: '8px',
+                  borderRadius: '4px',
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    background: 'white',
+                    height: '100%',
+                    width: `${progressToNext}%`,
+                    transition: 'width 0.5s ease',
+                  }}
+                />
               </div>
               <div style={{ fontSize: '0.75rem', marginTop: '0.5rem', opacity: 0.9 }}>
                 {nextLevel.minPoints - totalPoints} pts jusqu'à {nextLevel.name} {nextLevel.icon}
@@ -673,13 +727,15 @@ export default function Home() {
           )}
         </div>
 
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          gap: '0.5rem',
-          marginBottom: '1rem',
-          flexWrap: 'wrap'
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            marginBottom: '1rem',
+            flexWrap: 'wrap',
+          }}
+        >
           <button
             onClick={() => {
               setShowGamification(!showGamification);
@@ -694,7 +750,7 @@ export default function Home() {
               border: `2px solid ${theme.border}`,
               borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '1.3rem'
+              fontSize: '1.3rem',
             }}
             title="Gamification"
           >
@@ -714,7 +770,7 @@ export default function Home() {
               border: `2px solid ${theme.border}`,
               borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '1.3rem'
+              fontSize: '1.3rem',
             }}
             title="Famille"
           >
@@ -734,7 +790,7 @@ export default function Home() {
               border: `2px solid ${theme.border}`,
               borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '1.3rem'
+              fontSize: '1.3rem',
             }}
             title="Calendrier"
           >
@@ -754,7 +810,7 @@ export default function Home() {
               border: `2px solid ${theme.border}`,
               borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '1.3rem'
+              fontSize: '1.3rem',
             }}
             title="Statistiques"
           >
@@ -769,7 +825,7 @@ export default function Home() {
               border: `2px solid ${theme.border}`,
               borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '1.3rem'
+              fontSize: '1.3rem',
             }}
             title={darkMode ? 'Mode clair' : 'Mode sombre'}
           >
@@ -783,7 +839,7 @@ export default function Home() {
               border: 'none',
               borderRadius: '8px',
               fontSize: '1.3rem',
-              cursor: 'default'
+              cursor: 'default',
             }}
             title={isOnline ? 'En ligne' : 'Hors-ligne'}
           >
@@ -792,14 +848,16 @@ export default function Home() {
         </div>
 
         {currentMemberId && familyMembers.length > 0 && (
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: '0.5rem',
-            marginBottom: '1rem',
-            flexWrap: 'wrap'
-          }}>
-            {familyMembers.map(member => (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              marginBottom: '1rem',
+              flexWrap: 'wrap',
+            }}
+          >
+            {familyMembers.map((member) => (
               <button
                 key={member.id}
                 onClick={() => setCurrentMemberId(member.id)}
@@ -814,7 +872,7 @@ export default function Home() {
                   fontWeight: '600',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem'
+                  gap: '0.5rem',
                 }}
               >
                 <span style={{ fontSize: '1.2rem' }}>{member.avatar}</span>
@@ -828,103 +886,132 @@ export default function Home() {
           <strong>{TASKS.length} tâches</strong> organisées
         </p>
 
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          gap: '1rem', 
-          flexWrap: 'wrap',
-          fontSize: '0.85rem',
-          color: theme.textSecondary
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '1rem',
+            flexWrap: 'wrap',
+            fontSize: '0.85rem',
+            color: theme.textSecondary,
+          }}
+        >
           <span>✅ {completedTasks.size} aujourd'hui</span>
           <span>📅 {totalThisWeek} cette semaine</span>
-          <span>🔥 {streakDays} jour{streakDays > 1 ? 's' : ''}</span>
-          <span>🏆 {unlockedBadges.length}/{BADGES.length} badges</span>
+          <span>
+            🔥 {streakDays} jour{streakDays > 1 ? 's' : ''}
+          </span>
+          <span>
+            🏆 {unlockedBadges.length}/{BADGES.length} badges
+          </span>
         </div>
       </header>
 
       {/* GAMIFICATION */}
       {showGamification && (
-        <div style={{ 
-          background: theme.cardBg, 
-          borderRadius: '16px', 
-          padding: '1.5rem', 
-          marginBottom: '1rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-          border: `1px solid ${theme.border}`
-        }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
-            🎮 Gamification
-          </h2>
+        <div
+          style={{
+            background: theme.cardBg,
+            borderRadius: '16px',
+            padding: '1.5rem',
+            marginBottom: '1rem',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+            border: `1px solid ${theme.border}`,
+          }}
+        >
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>🎮 Gamification</h2>
 
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: theme.text, marginBottom: '1rem' }}>
-              🔥 Défis de la Semaine
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-              {weeklyChallenges.map(challenge => {
-                const thisWeekTasks = history.filter(h => {
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: theme.text, marginBottom: '1rem' }}>🔥 Défis de la Semaine</h3>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '1rem',
+              }}
+            >
+              {weeklyChallenges.map((challenge) => {
+                const weekStart = getWeekStart();
+                const thisWeekTasks = history.filter((h) => {
                   const taskDate = new Date(h.date);
-                  const weekStart = new Date();
-                  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
                   return taskDate >= weekStart;
                 });
-                
+
                 let progress = 0;
                 if (challenge.id.includes('complete-10')) {
+                  // 1,2,3,... pas de clamp
                   progress = thisWeekTasks.length;
                 } else if (challenge.id.includes('points')) {
                   const weekPoints = thisWeekTasks.reduce((sum, t) => sum + (t.points || 0), 0);
-                  progress = Math.min(weekPoints, challenge.target);
+                  progress = weekPoints;
+                } else if (challenge.id.includes('daily-streak')) {
+                  progress = streakDays;
                 }
-                
-                const percentage = Math.floor((progress / challenge.target) * 100);
+
+                const percentage = Math.min(Math.floor((progress / challenge.target) * 100), 100);
                 const completed = progress >= challenge.target;
-                
+
                 return (
-                  <div 
+                  <div
                     key={challenge.id}
                     style={{
                       padding: '1rem',
                       background: completed ? 'linear-gradient(135deg, #10b981, #059669)' : theme.bg,
                       borderRadius: '12px',
-                      border: `2px solid ${completed ? '#10b981' : theme.border}`
+                      border: `2px solid ${completed ? '#10b981' : theme.border}`,
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                       <span style={{ fontSize: '2rem' }}>{challenge.icon}</span>
                       <div style={{ flex: 1 }}>
-                        <div style={{ 
-                          fontWeight: '600', 
-                          fontSize: '1rem',
-                          color: completed ? 'white' : theme.text
-                        }}>
+                        <div
+                          style={{
+                            fontWeight: '600',
+                            fontSize: '1rem',
+                            color: completed ? 'white' : theme.text,
+                          }}
+                        >
                           {challenge.name}
                         </div>
-                        <div style={{ 
-                          fontSize: '0.85rem',
-                          color: completed ? 'rgba(255,255,255,0.9)' : theme.textSecondary
-                        }}>
+                        <div
+                          style={{
+                            fontSize: '0.85rem',
+                            color: completed ? 'rgba(255,255,255,0.9)' : theme.textSecondary,
+                          }}
+                        >
                           {challenge.description}
                         </div>
                       </div>
                     </div>
-                    <div style={{ background: completed ? 'rgba(255,255,255,0.2)' : theme.border, height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ 
-                        background: completed ? 'white' : '#3b82f6', 
-                        height: '100%', 
-                        width: `${percentage}%`,
-                        transition: 'width 0.5s ease'
-                      }} />
+                    <div
+                      style={{
+                        background: completed ? 'rgba(255,255,255,0.2)' : theme.border,
+                        height: '8px',
+                        borderRadius: '4px',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          background: completed ? 'white' : '#3b82f6',
+                          height: '100%',
+                          width: `${percentage}%`,
+                          transition: 'width 0.5s ease',
+                        }}
+                      />
                     </div>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      marginTop: '0.5rem',
-                      fontSize: '0.85rem',
-                      color: completed ? 'white' : theme.textSecondary
-                    }}>
-                      <span>{progress} / {challenge.target}</span>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        marginTop: '0.5rem',
+                        fontSize: '0.85rem',
+                        color: completed ? 'white' : theme.textSecondary,
+                      }}
+                    >
+                      <span>
+                        {progress} / {challenge.target}
+                      </span>
                       <span>💎 +{challenge.reward} pts</span>
                     </div>
                   </div>
@@ -937,11 +1024,17 @@ export default function Home() {
             <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: theme.text, marginBottom: '1rem' }}>
               🏆 Badges ({unlockedBadges.length}/{BADGES.length})
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem' }}>
-              {BADGES.map(badge => {
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+                gap: '1rem',
+              }}
+            >
+              {BADGES.map((badge) => {
                 const unlocked = unlockedBadges.includes(badge.id);
                 return (
-                  <div 
+                  <div
                     key={badge.id}
                     style={{
                       padding: '1rem',
@@ -950,24 +1043,34 @@ export default function Home() {
                       textAlign: 'center',
                       border: `2px solid ${unlocked ? badge.color : theme.border}`,
                       opacity: unlocked ? 1 : 0.5,
-                      transition: 'all 0.3s ease'
+                      transition: 'all 0.3s ease',
                     }}
                   >
-                    <div style={{ fontSize: '3rem', marginBottom: '0.5rem', filter: unlocked ? 'none' : 'grayscale(100%)' }}>
+                    <div
+                      style={{
+                        fontSize: '3rem',
+                        marginBottom: '0.5rem',
+                        filter: unlocked ? 'none' : 'grayscale(100%)',
+                      }}
+                    >
                       {badge.icon}
                     </div>
-                    <div style={{ 
-                      fontSize: '0.85rem', 
-                      fontWeight: '600',
-                      color: unlocked ? 'white' : theme.text,
-                      marginBottom: '0.25rem'
-                    }}>
+                    <div
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        color: unlocked ? 'white' : theme.text,
+                        marginBottom: '0.25rem',
+                      }}
+                    >
                       {badge.name}
                     </div>
-                    <div style={{ 
-                      fontSize: '0.7rem',
-                      color: unlocked ? 'rgba(255,255,255,0.9)' : theme.textSecondary
-                    }}>
+                    <div
+                      style={{
+                        fontSize: '0.7rem',
+                        color: unlocked ? 'rgba(255,255,255,0.9)' : theme.textSecondary,
+                      }}
+                    >
                       {badge.description}
                     </div>
                   </div>
@@ -980,26 +1083,26 @@ export default function Home() {
 
       {/* GESTION FAMILIALE */}
       {showFamily && (
-        <div style={{ 
-          background: theme.cardBg, 
-          borderRadius: '16px', 
-          padding: '1.5rem', 
-          marginBottom: '1rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-          border: `1px solid ${theme.border}`
-        }}>
+        <div
+          style={{
+            background: theme.cardBg,
+            borderRadius: '16px',
+            padding: '1.5rem',
+            marginBottom: '1rem',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+            border: `1px solid ${theme.border}`,
+          }}
+        >
           <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
             👨‍👩‍👧‍👦 Gestion Familiale
           </h2>
 
           {sortedMembers.length > 0 && (
             <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: theme.text, marginBottom: '1rem' }}>
-                🏆 Classement
-              </h3>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: theme.text, marginBottom: '1rem' }}>🏆 Classement</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {sortedMembers.map((member, index) => (
-                  <div 
+                  <div
                     key={member.id}
                     style={{
                       padding: '1rem',
@@ -1008,29 +1111,35 @@ export default function Home() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '1rem',
-                      border: `2px solid ${index === 0 ? '#f59e0b' : theme.border}`
+                      border: `2px solid ${index === 0 ? '#f59e0b' : theme.border}`,
                     }}
                   >
-                    <div style={{ 
-                      fontSize: '2rem', 
-                      fontWeight: 'bold',
-                      color: index === 0 ? 'white' : theme.text
-                    }}>
+                    <div
+                      style={{
+                        fontSize: '2rem',
+                        fontWeight: 'bold',
+                        color: index === 0 ? 'white' : theme.text,
+                      }}
+                    >
                       {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
                     </div>
                     <div style={{ fontSize: '2rem' }}>{member.avatar}</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ 
-                        fontWeight: '600', 
-                        fontSize: '1.1rem',
-                        color: index === 0 ? 'white' : theme.text
-                      }}>
+                      <div
+                        style={{
+                          fontWeight: '600',
+                          fontSize: '1.1rem',
+                          color: index === 0 ? 'white' : theme.text,
+                        }}
+                      >
                         {member.name}
                       </div>
-                      <div style={{ 
-                        fontSize: '0.9rem',
-                        color: index === 0 ? 'rgba(255,255,255,0.9)' : theme.textSecondary
-                      }}>
+                      <div
+                        style={{
+                          fontSize: '0.9rem',
+                          color: index === 0 ? 'rgba(255,255,255,0.9)' : theme.textSecondary,
+                        }}
+                      >
                         {member.points} points
                       </div>
                     </div>
@@ -1042,7 +1151,7 @@ export default function Home() {
                         color: index === 0 ? 'white' : '#ef4444',
                         fontSize: '1.5rem',
                         cursor: 'pointer',
-                        padding: '0.5rem'
+                        padding: '0.5rem',
                       }}
                       title="Supprimer"
                     >
@@ -1066,7 +1175,7 @@ export default function Home() {
                 borderRadius: '12px',
                 fontSize: '1rem',
                 fontWeight: '600',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               ➕ Ajouter un membre
@@ -1086,7 +1195,7 @@ export default function Home() {
                   border: `2px solid ${theme.border}`,
                   background: theme.bg,
                   color: theme.text,
-                  fontSize: '1rem'
+                  fontSize: '1rem',
                 }}
               />
               <button
@@ -1098,7 +1207,7 @@ export default function Home() {
                   border: 'none',
                   borderRadius: '8px',
                   fontWeight: '600',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
               >
                 ✓
@@ -1115,7 +1224,7 @@ export default function Home() {
                   border: 'none',
                   borderRadius: '8px',
                   fontWeight: '600',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
               >
                 ×
@@ -1127,71 +1236,95 @@ export default function Home() {
 
       {/* CALENDRIER */}
       {showCalendar && (
-        <div style={{ 
-          background: theme.cardBg, 
-          borderRadius: '16px', 
-          padding: '1.5rem', 
-          marginBottom: '1rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-          border: `1px solid ${theme.border}`
-        }}>
+        <div
+          style={{
+            background: theme.cardBg,
+            borderRadius: '16px',
+            padding: '1.5rem',
+            marginBottom: '1rem',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+            border: `1px solid ${theme.border}`,
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <button onClick={prevMonth} style={{
-              padding: '0.5rem 1rem',
-              background: theme.bg,
-              color: theme.text,
-              border: `2px solid ${theme.border}`,
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1.2rem'
-            }}>
+            <button
+              onClick={prevMonth}
+              style={{
+                padding: '0.5rem 1rem',
+                background: theme.bg,
+                color: theme.text,
+                border: `2px solid ${theme.border}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '1.2rem',
+              }}
+            >
               ←
             </button>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text }}>
               {monthNames[currentMonth]} {currentYear}
             </h2>
-            <button onClick={nextMonth} style={{
-              padding: '0.5rem 1rem',
-              background: theme.bg,
-              color: theme.text,
-              border: `2px solid ${theme.border}`,
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1.2rem'
-            }}>
+            <button
+              onClick={nextMonth}
+              style={{
+                padding: '0.5rem 1rem',
+                background: theme.bg,
+                color: theme.text,
+                border: `2px solid ${theme.border}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '1.2rem',
+              }}
+            >
               →
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem', marginBottom: '0.5rem' }}>
-            {dayNames.map(day => (
-              <div key={day} style={{ 
-                textAlign: 'center', 
-                fontWeight: '600', 
-                fontSize: '0.75rem',
-                color: theme.textSecondary,
-                padding: '0.5rem 0'
-              }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, 1fr)',
+              gap: '0.25rem',
+              marginBottom: '0.5rem',
+            }}
+          >
+            {dayNames.map((day) => (
+              <div
+                key={day}
+                style={{
+                  textAlign: 'center',
+                  fontWeight: '600',
+                  fontSize: '0.75rem',
+                  color: theme.textSecondary,
+                  padding: '0.5rem 0',
+                }}
+              >
                 {day}
               </div>
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, 1fr)',
+              gap: '0.25rem',
+            }}
+          >
             {Array.from({ length: adjustedFirstDay }).map((_, i) => (
               <div key={`empty-${i}`} style={{ aspectRatio: '1', background: theme.bg, borderRadius: '8px' }} />
             ))}
-            
+
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const day = i + 1;
               const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
               const tasksForDay = getTasksForDate(dateStr, scheduledTasks);
               const isToday = dateStr === today;
               const isSelected = dateStr === selectedDate;
-              const completedForDay = history.filter(h => h.date === dateStr).length;
-              
+              const completedForDay = history.filter((h) => h.date === dateStr).length;
+
               return (
-                <div 
+                <div
                   key={day}
                   onClick={() => setSelectedDate(dateStr)}
                   style={{
@@ -1206,35 +1339,41 @@ export default function Home() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     position: 'relative',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
                   }}
                 >
-                  <div style={{ 
-                    fontSize: '0.9rem', 
-                    fontWeight: isToday ? '700' : '500',
-                    color: isSelected ? 'white' : theme.text
-                  }}>
+                  <div
+                    style={{
+                      fontSize: '0.9rem',
+                      fontWeight: isToday ? '700' : '500',
+                      color: isSelected ? 'white' : theme.text,
+                    }}
+                  >
                     {day}
                   </div>
                   {tasksForDay.length > 0 && (
-                    <div style={{
-                      fontSize: '0.65rem',
-                      color: isSelected ? 'white' : '#3b82f6',
-                      fontWeight: '600'
-                    }}>
+                    <div
+                      style={{
+                        fontSize: '0.65rem',
+                        color: isSelected ? 'white' : '#3b82f6',
+                        fontWeight: '600',
+                      }}
+                    >
                       {tasksForDay.length}
                     </div>
                   )}
                   {completedForDay > 0 && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '2px',
-                      right: '2px',
-                      width: '6px',
-                      height: '6px',
-                      borderRadius: '50%',
-                      background: '#4caf50'
-                    }} />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '2px',
+                        right: '2px',
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: '#4caf50',
+                      }}
+                    />
                   )}
                 </div>
               );
@@ -1243,17 +1382,29 @@ export default function Home() {
 
           {selectedDate && (
             <div style={{ marginTop: '1.5rem', padding: '1rem', background: theme.bg, borderRadius: '12px' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: theme.text, marginBottom: '1rem' }}>
-                📋 {new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              <h3
+                style={{
+                  fontSize: '1.2rem',
+                  fontWeight: '600',
+                  color: theme.text,
+                  marginBottom: '1rem',
+                }}
+              >
+                📋{' '}
+                {new Date(selectedDate).toLocaleDateString('fr-FR', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                })}
               </h3>
               {selectedDateTasks.length === 0 ? (
                 <p style={{ color: theme.textSecondary, fontSize: '0.9rem' }}>Aucune tâche planifiée</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {selectedDateTasks.map((task, idx) => {
-                    const isCompleted = history.some(h => h.taskId === task.taskId && h.date === selectedDate);
+                    const isCompleted = history.some((h) => h.taskId === task.taskId && h.date === selectedDate);
                     return (
-                      <div 
+                      <div
                         key={idx}
                         onClick={() => toggleTaskCompletionForDate(task.taskId, selectedDate)}
                         style={{
@@ -1262,60 +1413,79 @@ export default function Home() {
                           border: isCompleted ? '2px solid #4caf50' : `1px solid ${theme.border}`,
                           borderRadius: '8px',
                           cursor: 'pointer',
-                          transition: 'all 0.3s ease'
+                          transition: 'all 0.3s ease',
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <div style={{
-                            width: '24px',
-                            height: '24px',
-                            borderRadius: '50%',
-                            border: isCompleted ? '2px solid #4caf50' : `2px solid ${theme.border}`,
-                            background: isCompleted ? '#4caf50' : 'transparent',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0
-                          }}>
-                            {isCompleted && <span style={{ color: 'white', fontSize: '14px', fontWeight: 'bold' }}>✓</span>}
+                          <div
+                            style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              border: isCompleted ? '2px solid #4caf50' : `2px solid ${theme.border}`,
+                              background: isCompleted ? '#4caf50' : 'transparent',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
+                            {isCompleted && (
+                              <span style={{ color: 'white', fontSize: '14px', fontWeight: 'bold' }}>✓</span>
+                            )}
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ 
-                              fontWeight: '600', 
-                              fontSize: '0.95rem',
-                              color: isCompleted ? '#4caf50' : theme.text,
-                              textDecoration: isCompleted ? 'line-through' : 'none',
-                              marginBottom: '0.5rem'
-                            }}>
+                            <div
+                              style={{
+                                fontWeight: '600',
+                                fontSize: '0.95rem',
+                                color: isCompleted ? '#4caf50' : theme.text,
+                                textDecoration: isCompleted ? 'line-through' : 'none',
+                                marginBottom: '0.5rem',
+                              }}
+                            >
                               {task.taskName}
                             </div>
-                            <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', flexWrap: 'wrap' }}>
-                              <span style={{ 
-                                padding: '0.2rem 0.5rem', 
-                                background: darkMode ? '#1e3a8a' : '#e3f2fd',
-                                color: darkMode ? '#93c5fd' : '#1565c0',
-                                borderRadius: '4px',
-                                fontWeight: '600'
-                              }}>
+                            <div
+                              style={{
+                                display: 'flex',
+                                gap: '0.5rem',
+                                fontSize: '0.75rem',
+                                flexWrap: 'wrap',
+                              }}
+                            >
+                              <span
+                                style={{
+                                  padding: '0.2rem 0.5rem',
+                                  background: darkMode ? '#1e3a8a' : '#e3f2fd',
+                                  color: darkMode ? '#93c5fd' : '#1565c0',
+                                  borderRadius: '4px',
+                                  fontWeight: '600',
+                                }}
+                              >
                                 {task.zone}
                               </span>
-                              <span style={{ 
-                                padding: '0.2rem 0.5rem', 
-                                background: darkMode ? '#065f46' : '#d1fae5',
-                                color: darkMode ? '#6ee7b7' : '#047857',
-                                borderRadius: '4px',
-                                fontWeight: '600'
-                              }}>
+                              <span
+                                style={{
+                                  padding: '0.2rem 0.5rem',
+                                  background: darkMode ? '#065f46' : '#d1fae5',
+                                  color: darkMode ? '#6ee7b7' : '#047857',
+                                  borderRadius: '4px',
+                                  fontWeight: '600',
+                                }}
+                              >
                                 {task.frequency}
                               </span>
                               {task.estimatedTime && (
-                                <span style={{ 
-                                  padding: '0.2rem 0.5rem', 
-                                  background: darkMode ? '#7c2d12' : '#fff3e0',
-                                  color: darkMode ? '#fdba74' : '#e65100',
-                                  borderRadius: '4px',
-                                  fontWeight: '600'
-                                }}>
+                                <span
+                                  style={{
+                                    padding: '0.2rem 0.5rem',
+                                    background: darkMode ? '#7c2d12' : '#fff3e0',
+                                    color: darkMode ? '#fdba74' : '#e65100',
+                                    borderRadius: '4px',
+                                    fontWeight: '600',
+                                  }}
+                                >
                                   ⏱ {task.estimatedTime}m
                                 </span>
                               )}
@@ -1334,57 +1504,112 @@ export default function Home() {
 
       {/* STATISTIQUES */}
       {showStats && (
-        <div style={{ 
-          background: theme.cardBg, 
-          borderRadius: '16px', 
-          padding: '1.5rem', 
-          marginBottom: '1rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-          border: `1px solid ${theme.border}`
-        }}>
+        <div
+          style={{
+            background: theme.cardBg,
+            borderRadius: '16px',
+            padding: '1.5rem',
+            marginBottom: '1rem',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+            border: `1px solid ${theme.border}`,
+          }}
+        >
           <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
             📊 7 derniers jours
           </h2>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', height: '150px', gap: '0.25rem', marginBottom: '1.5rem' }}>
+
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-around',
+              alignItems: 'flex-end',
+              height: '150px',
+              gap: '0.25rem',
+              marginBottom: '1.5rem',
+            }}
+          >
             {stats7Days.map((stat, idx) => (
-              <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-                <div style={{ 
-                  fontSize: '0.75rem', 
-                  fontWeight: '600',
-                  color: theme.text
-                }}>
+              <div
+                key={idx}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    color: theme.text,
+                  }}
+                >
                   {stat.count}
                 </div>
-                <div style={{ 
-                  width: '100%',
-                  height: `${(stat.count / maxCount) * 100}px`,
-                  background: stat.count > 0 ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : theme.border,
-                  borderRadius: '8px 8px 0 0',
-                  minHeight: '10px'
-                }} />
-                <div style={{ fontSize: '0.65rem', color: theme.textSecondary }}>
-                  {stat.label}
-                </div>
+                <div
+                  style={{
+                    width: '100%',
+                    height: `${(stat.count / maxCount) * 100}px`,
+                    background:
+                      stat.count > 0 ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : theme.border,
+                    borderRadius: '8px 8px 0 0',
+                    minHeight: '10px',
+                  }}
+                />
+                <div style={{ fontSize: '0.65rem', color: theme.textSecondary }}>{stat.label}</div>
               </div>
             ))}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
-            <div style={{ background: theme.bg, padding: '0.75rem', borderRadius: '8px', textAlign: 'center' }}>
+            <div
+              style={{
+                background: theme.bg,
+                padding: '0.75rem',
+                borderRadius: '8px',
+                textAlign: 'center',
+              }}
+            >
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>{totalThisWeek}</div>
               <div style={{ fontSize: '0.75rem', color: theme.textSecondary }}>Semaine</div>
             </div>
-            <div style={{ background: theme.bg, padding: '0.75rem', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>{completedTasks.size}</div>
+            <div
+              style={{
+                background: theme.bg,
+                padding: '0.75rem',
+                borderRadius: '8px',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
+                {completedTasks.size}
+              </div>
               <div style={{ fontSize: '0.75rem', color: theme.textSecondary }}>Aujourd'hui</div>
             </div>
-            <div style={{ background: theme.bg, padding: '0.75rem', borderRadius: '8px', textAlign: 'center' }}>
+            <div
+              style={{
+                background: theme.bg,
+                padding: '0.75rem',
+                borderRadius: '8px',
+                textAlign: 'center',
+              }}
+            >
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f59e0b' }}>{streakDays}</div>
               <div style={{ fontSize: '0.75rem', color: theme.textSecondary }}>Streak</div>
             </div>
-            <div style={{ background: theme.bg, padding: '0.75rem', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#8b5cf6' }}>{history.length}</div>
+            <div
+              style={{
+                background: theme.bg,
+                padding: '0.75rem',
+                borderRadius: '8px',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#8b5cf6' }}>
+                {history.length}
+              </div>
               <div style={{ fontSize: '0.75rem', color: theme.textSecondary }}>Total</div>
             </div>
           </div>
@@ -1394,28 +1619,38 @@ export default function Home() {
       {/* ZONES ET TÂCHES */}
       {!selectedZone ? (
         <>
-          <div style={{ 
-            background: theme.cardBg, 
-            borderRadius: '16px', 
-            padding: '1.5rem', 
-            marginBottom: '1rem',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-            border: `1px solid ${theme.border}`
-          }}>
+          <div
+            style={{
+              background: theme.cardBg,
+              borderRadius: '16px',
+              padding: '1.5rem',
+              marginBottom: '1rem',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+              border: `1px solid ${theme.border}`,
+            }}
+          >
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
               📍 {ZONES.length} Zones
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                gap: '1rem',
+              }}
+            >
               {ZONES.map((zone) => {
                 const taskCount = TASKS.filter((t) => t.zone === zone).length;
-                const completedCount = TASKS.filter((t) => t.zone === zone && completedTasks.has(t.id)).length;
+                const completedCount = TASKS.filter(
+                  (t) => t.zone === zone && completedTasks.has(t.id),
+                ).length;
                 const percentage = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
-                
+
                 return (
-                  <div 
-                    key={zone} 
+                  <div
+                    key={zone}
                     onClick={() => setSelectedZone(zone)}
-                    style={{ 
+                    style={{
                       background: `linear-gradient(135deg, ${theme.gradientFrom}, ${theme.gradientTo})`,
                       padding: '1.25rem',
                       borderRadius: '12px',
@@ -1423,27 +1658,48 @@ export default function Home() {
                       cursor: 'pointer',
                       border: `2px solid ${theme.border}`,
                       position: 'relative',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
                     }}
                   >
                     {percentage > 0 && (
-                      <div style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        height: '4px',
-                        width: `${percentage}%`,
-                        background: '#4caf50'
-                      }} />
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          height: '4px',
+                          width: `${percentage}%`,
+                          background: '#4caf50',
+                        }}
+                      />
                     )}
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.25rem', color: theme.text }}>
+                    <h3
+                      style={{
+                        fontSize: '1.1rem',
+                        fontWeight: '700',
+                        marginBottom: '0.25rem',
+                        color: theme.text,
+                      }}
+                    >
                       {zone}
                     </h3>
-                    <p style={{ fontSize: '0.9rem', color: theme.textSecondary, marginBottom: '0.25rem' }}>
+                    <p
+                      style={{
+                        fontSize: '0.9rem',
+                        color: theme.textSecondary,
+                        marginBottom: '0.25rem',
+                      }}
+                    >
                       {taskCount} tâches
                     </p>
                     {percentage > 0 && (
-                      <p style={{ fontSize: '0.75rem', color: '#4caf50', fontWeight: '600' }}>
+                      <p
+                        style={{
+                          fontSize: '0.75rem',
+                          color: '#4caf50',
+                          fontWeight: '600',
+                        }}
+                      >
                         {percentage}%
                       </p>
                     )}
@@ -1453,12 +1709,20 @@ export default function Home() {
             </div>
           </div>
 
-          <div style={{ background: theme.cardBg, borderRadius: '16px', padding: '1.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: `1px solid ${theme.border}` }}>
+          <div
+            style={{
+              background: theme.cardBg,
+              borderRadius: '16px',
+              padding: '1.5rem',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+              border: `1px solid ${theme.border}`,
+            }}
+          >
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
               🔔 Notifications
             </h2>
             {!notificationEnabled ? (
-              <button 
+              <button
                 onClick={handleEnableNotifications}
                 style={{
                   width: '100%',
@@ -1469,36 +1733,41 @@ export default function Home() {
                   borderRadius: '12px',
                   fontSize: '1rem',
                   fontWeight: '600',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
               >
                 🔔 Activer les rappels
               </button>
             ) : (
-              <div style={{
-                background: 'linear-gradient(135deg, #c8e6c9, #a5d6a7)',
-                border: '2px solid #4caf50',
-                color: '#1b5e20',
-                padding: '1rem',
-                borderRadius: '12px',
-                textAlign: 'center',
-                fontSize: '0.9rem'
-              }}>
-                <strong>✅ Activées !</strong><br/>
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #c8e6c9, #a5d6a7)',
+                  border: '2px solid #4caf50',
+                  color: '#1b5e20',
+                  padding: '1rem',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  fontSize: '0.9rem',
+                }}
+              >
+                <strong>✅ Activées !</strong>
+                <br />
                 Rappels à 20h la veille.
               </div>
             )}
           </div>
         </>
       ) : (
-        <div style={{ 
-          background: theme.cardBg, 
-          borderRadius: '16px', 
-          padding: '1.5rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-          border: `1px solid ${theme.border}`
-        }}>
-          <button 
+        <div
+          style={{
+            background: theme.cardBg,
+            borderRadius: '16px',
+            padding: '1.5rem',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+            border: `1px solid ${theme.border}`,
+          }}
+        >
+          <button
             onClick={() => setSelectedZone(null)}
             style={{
               padding: '0.5rem 1rem',
@@ -1509,16 +1778,16 @@ export default function Home() {
               fontSize: '0.9rem',
               fontWeight: '600',
               cursor: 'pointer',
-              marginBottom: '1rem'
+              marginBottom: '1rem',
             }}
           >
             ← Retour
           </button>
-          
+
           <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: theme.text, marginBottom: '1rem' }}>
             {selectedZone}
           </h2>
-          
+
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
             <button
               onClick={() => setFilterFrequency('all')}
@@ -1530,12 +1799,12 @@ export default function Home() {
                 borderRadius: '6px',
                 fontSize: '0.8rem',
                 fontWeight: '600',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               Toutes
             </button>
-            {frequencies.map(freq => (
+            {frequencies.map((freq) => (
               <button
                 key={freq}
                 onClick={() => setFilterFrequency(freq)}
@@ -1548,7 +1817,7 @@ export default function Home() {
                   fontSize: '0.8rem',
                   fontWeight: '600',
                   cursor: 'pointer',
-                  textTransform: 'capitalize'
+                  textTransform: 'capitalize',
                 }}
               >
                 {freq}
@@ -1559,83 +1828,111 @@ export default function Home() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {zoneTasks.map((task) => {
               const isCompleted = completedTasks.has(task.id);
-              const assignment = taskAssignments.find(a => a.taskId === task.id);
-              const assignedMember = assignment ? familyMembers.find(m => m.id === assignment.memberId) : null;
-              const comments = taskComments.filter(c => c.taskId === task.id);
-              
+              const assignment = taskAssignments.find((a) => a.taskId === task.id);
+              const assignedMember = assignment ? familyMembers.find((m) => m.id === assignment.memberId) : null;
+              const comments = taskComments.filter((c) => c.taskId === task.id);
+
               return (
-                <div 
+                <div
                   key={task.id}
                   style={{
                     background: isCompleted ? (darkMode ? '#1e3a1e' : '#e8f5e9') : theme.bg,
                     padding: '1rem',
                     borderRadius: '12px',
-                    border: isCompleted ? '2px solid #4caf50' : assignedMember ? `2px solid ${assignedMember.color}` : `2px solid ${theme.border}`
+                    border: isCompleted
+                      ? '2px solid #4caf50'
+                      : assignedMember
+                      ? `2px solid ${assignedMember.color}`
+                      : `2px solid ${theme.border}`,
                   }}
                 >
-                  <div 
+                  <div
                     onClick={() => toggleTaskCompletion(task.id)}
-                    style={{ display: 'flex', alignItems: 'start', gap: '0.75rem', cursor: 'pointer' }}
-                  >
-                    <div style={{
-                      width: '22px',
-                      height: '22px',
-                      borderRadius: '50%',
-                      border: isCompleted ? '2px solid #4caf50' : `2px solid ${theme.border}`,
-                      background: isCompleted ? '#4caf50' : 'transparent',
+                    style={{
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      marginTop: '2px'
-                    }}>
-                      {isCompleted && <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>}
+                      alignItems: 'start',
+                      gap: '0.75rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '22px',
+                        height: '22px',
+                        borderRadius: '50%',
+                        border: isCompleted ? '2px solid #4caf50' : `2px solid ${theme.border}`,
+                        background: isCompleted ? '#4caf50' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        marginTop: '2px',
+                      }}
+                    >
+                      {isCompleted && (
+                        <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>✓</span>
+                      )}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <h3 style={{ 
-                        fontSize: '1rem', 
-                        fontWeight: '600', 
-                        color: isCompleted ? '#4caf50' : theme.text,
-                        textDecoration: isCompleted ? 'line-through' : 'none',
-                        marginBottom: '0.5rem'
-                      }}>
+                      <h3
+                        style={{
+                          fontSize: '1rem',
+                          fontWeight: '600',
+                          color: isCompleted ? '#4caf50' : theme.text,
+                          textDecoration: isCompleted ? 'line-through' : 'none',
+                          marginBottom: '0.5rem',
+                        }}
+                      >
                         {task.name}
                       </h3>
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                        <span style={{
-                          padding: '0.2rem 0.6rem',
-                          background: darkMode ? '#1e3a8a' : '#e3f2fd',
-                          color: darkMode ? '#93c5fd' : '#1565c0',
-                          borderRadius: '6px',
-                          fontSize: '0.75rem',
-                          fontWeight: '600'
-                        }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '0.5rem',
+                          flexWrap: 'wrap',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <span
+                          style={{
+                            padding: '0.2rem 0.6rem',
+                            background: darkMode ? '#1e3a8a' : '#e3f2fd',
+                            color: darkMode ? '#93c5fd' : '#1565c0',
+                            borderRadius: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                          }}
+                        >
                           📅 {task.frequency}
                         </span>
                         {task.estimatedTime && (
-                          <span style={{
-                            padding: '0.2rem 0.6rem',
-                            background: darkMode ? '#7c2d12' : '#fff3e0',
-                            color: darkMode ? '#fdba74' : '#e65100',
-                            borderRadius: '6px',
-                            fontSize: '0.75rem',
-                            fontWeight: '600'
-                          }}>
+                          <span
+                            style={{
+                              padding: '0.2rem 0.6rem',
+                              background: darkMode ? '#7c2d12' : '#fff3e0',
+                              color: darkMode ? '#fdba74' : '#e65100',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                            }}
+                          >
                             ⏱ {task.estimatedTime}m
                           </span>
                         )}
                         {assignedMember && (
-                          <span style={{
-                            padding: '0.2rem 0.6rem',
-                            background: assignedMember.color,
-                            color: 'white',
-                            borderRadius: '6px',
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.25rem'
-                          }}>
+                          <span
+                            style={{
+                              padding: '0.2rem 0.6rem',
+                              background: assignedMember.color,
+                              color: 'white',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                            }}
+                          >
                             {assignedMember.avatar} {assignedMember.name}
                           </span>
                         )}
@@ -1643,7 +1940,14 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div
+                    style={{
+                      marginTop: '0.75rem',
+                      display: 'flex',
+                      gap: '0.5rem',
+                      flexWrap: 'wrap',
+                    }}
+                  >
                     {familyMembers.length > 0 && (
                       <select
                         value={assignment?.memberId || ''}
@@ -1656,11 +1960,11 @@ export default function Home() {
                           color: theme.text,
                           fontSize: '0.8rem',
                           fontWeight: '600',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
                         }}
                       >
                         <option value="">Assigner à...</option>
-                        {familyMembers.map(member => (
+                        {familyMembers.map((member) => (
                           <option key={member.id} value={member.id}>
                             {member.avatar} {member.name}
                           </option>
@@ -1668,7 +1972,9 @@ export default function Home() {
                       </select>
                     )}
                     <button
-                      onClick={() => setSelectedTaskForComment(selectedTaskForComment === task.id ? null : task.id)}
+                      onClick={() =>
+                        setSelectedTaskForComment(selectedTaskForComment === task.id ? null : task.id)
+                      }
                       style={{
                         padding: '0.4rem 0.8rem',
                         background: comments.length > 0 ? '#3b82f6' : theme.bg,
@@ -1677,7 +1983,7 @@ export default function Home() {
                         borderRadius: '6px',
                         fontSize: '0.8rem',
                         fontWeight: '600',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
                       }}
                     >
                       💬 {comments.length > 0 && `(${comments.length})`}
@@ -1686,13 +1992,39 @@ export default function Home() {
 
                   {selectedTaskForComment === task.id && (
                     <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: theme.bg, borderRadius: '8px' }}>
-                      {comments.map(comment => {
-                        const member = familyMembers.find(m => m.id === comment.memberId);
+                      {comments.map((comment) => {
+                        const member = familyMembers.find((m) => m.id === comment.memberId);
                         return (
-                          <div key={comment.id} style={{ marginBottom: '0.5rem', paddingBottom: '0.5rem', borderBottom: `1px solid ${theme.border}` }}>
-                            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.25rem', fontSize: '0.75rem', color: theme.textSecondary }}>
-                              {member && <span>{member.avatar} {member.name}</span>}
-                              <span>{new Date(comment.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                          <div
+                            key={comment.id}
+                            style={{
+                              marginBottom: '0.5rem',
+                              paddingBottom: '0.5rem',
+                              borderBottom: `1px solid ${theme.border}`,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: 'flex',
+                                gap: '0.5rem',
+                                marginBottom: '0.25rem',
+                                fontSize: '0.75rem',
+                                color: theme.textSecondary,
+                              }}
+                            >
+                              {member && (
+                                <span>
+                                  {member.avatar} {member.name}
+                                </span>
+                              )}
+                              <span>
+                                {new Date(comment.createdAt).toLocaleDateString('fr-FR', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
                             </div>
                             <div style={{ fontSize: '0.85rem', color: theme.text }}>{comment.comment}</div>
                           </div>
@@ -1712,7 +2044,7 @@ export default function Home() {
                             border: `2px solid ${theme.border}`,
                             background: theme.cardBg,
                             color: theme.text,
-                            fontSize: '0.85rem'
+                            fontSize: '0.85rem',
                           }}
                         />
                         <button
@@ -1725,7 +2057,7 @@ export default function Home() {
                             borderRadius: '6px',
                             fontWeight: '600',
                             cursor: 'pointer',
-                            fontSize: '0.85rem'
+                            fontSize: '0.85rem',
                           }}
                         >
                           ➤
