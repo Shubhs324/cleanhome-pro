@@ -1,5 +1,3 @@
-[![Build Status](https://github.com/Momat2023/cleanhome-pro/actions/workflows/build.yml/badge.svg)](https://github.com/Momat2023/cleanhome-pro/actions)
-
 # 🏠 CleanHome Pro
 
 > **L'application tout-en-un pour gérer votre ménage avec style et efficacité**
