@@ -15,29 +15,41 @@ export function useFirebaseFamily() {
     }
   }, []);
 
-  const createFamily = async () => {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const familyRef = ref(database, `families/${code}`);
+const createFamily = async () => {
+  console.log('🔍 1. Début createFamily');
+  
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  console.log('🔍 2. Code généré:', code);
+  
+  const familyRef = ref(database, `families/${code}`);
+  
+  try {
+    console.log('🔍 3. Écriture Firebase...');
+    await set(familyRef, {
+      createdAt: new Date().toISOString(),
+      members: {},
+      history: {},
+      assignments: {},
+      comments: {}
+    });
+    console.log('🔍 4. Firebase OK');
     
-    try {
-      await set(familyRef, {
-        createdAt: new Date().toISOString(),
-        members: {},
-        history: {},
-        assignments: {},
-        comments: {}
-      });
-      
-      localStorage.setItem('family-code', code);
-      setFamilyCode(code);
-      setIsConnected(true);
-      console.log(`✅ Famille créée: ${code}`);
-      return code;
-    } catch (error) {
-      console.error('❌ Erreur création famille:', error);
-      return null;
-    }
-  };
+    console.log('🔍 5. Sauvegarde localStorage...');
+    localStorage.setItem('family-code', code);
+    const verify = localStorage.getItem('family-code');
+    console.log('🔍 6. Vérification localStorage:', verify);
+    
+    setFamilyCode(code);
+    setIsConnected(true);
+    
+    console.log(`✅ Famille créée: ${code}`);
+    return code;
+  } catch (error) {
+    console.error('❌ Erreur création famille:', error);
+    return null;
+  }
+};
+
 
   const joinFamily = async (code: string) => {
     if (!code || code.length !== 6) {
@@ -91,15 +103,20 @@ export function useFirebaseFamily() {
     const unsubscribe = onValue(dataRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        
+
+      // 🔍 DEBUG - Affiche EXACTEMENT ce qui est reçu
+      console.log('🔍 RAW DATA reçue pour', path, ':', JSON.stringify(data, null, 2));
+	  
         // Convertir objet → array si besoin
         if (typeof data === 'object' && !Array.isArray(data)) {
           const dataArray = Object.entries(data).map(([key, value]) => ({
             id: key,
             ...value as object
           }));
+          console.log('🔍 CONVERTED TO ARRAY:', dataArray);
           callback(dataArray);
         } else {
+		  console.log('🔍 ALREADY ARRAY:', data);	
           callback(data);
         }
       } else {

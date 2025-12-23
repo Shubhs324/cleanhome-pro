@@ -108,7 +108,26 @@ export default function Home() {
   listenToData: firebaseListenToData
 } = useFirebaseFamily();
 
+console.log('🔍 État Firebase au render:', {
+  isConnected: firebaseIsConnected,
+  familyCode: firebaseFamilyCode
+});
   const [showFamilyModal, setShowFamilyModal] = useState(!firebaseIsConnected);
+
+// ✅ Charge localStorage SEULEMENT si pas connecté à Firebase
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('family-members');
+    
+    // Ne charge localStorage que si Firebase n'est PAS connecté
+    if (saved && !firebaseIsConnected) {
+      console.log('📦 Charge localStorage (Firebase déconnecté)');
+      setFamilyMembers(JSON.parse(saved));
+    } else if (firebaseIsConnected) {
+      console.log('🔥 Firebase connecté, ignore localStorage');
+    }
+  }
+}, [firebaseIsConnected]); // ✅ Dépend de la connexion Firebase
 
 
   useEffect(() => {
@@ -143,11 +162,6 @@ export default function Home() {
       const savedDarkMode = localStorage.getItem('darkMode');
       if (savedDarkMode === 'true') {
         setDarkMode(true);
-      }
-
-      const savedMembers = localStorage.getItem('family-members');
-      if (savedMembers) {
-        setFamilyMembers(JSON.parse(savedMembers));
       }
 
       const savedAssignments = localStorage.getItem('task-assignments');
@@ -312,14 +326,17 @@ const handleJoinFamilyWrapper = async (code: string) => {
 // ========================================
 
 useEffect(() => {
+  console.log('🔍 useEffect listener déclenché:', firebaseIsConnected);
   if (!firebaseIsConnected) return;
 
   const unsubMembers = firebaseListenToData('members', (data) => {
-    if (data && Array.isArray(data) && data.length > 0) {
-      setFamilyMembers(data as FamilyMember[]);
-      console.log('📥 Members reçus:', data.length);
-    }
-  });
+  if (data && Array.isArray(data) && data.length > 0) {
+    console.log('📥 Members reçus:', data.length);
+    console.log('📥 AVANT setFamilyMembers:', familyMembers.length);
+    setFamilyMembers(data as FamilyMember[]);
+    console.log('📥 APRÈS setFamilyMembers (devrait être async)');
+  }
+});
 
   const unsubHistory = firebaseListenToData('history', (data) => {
     if (data && Array.isArray(data) && data.length > 0) {
@@ -1083,7 +1100,7 @@ useEffect(() => {
           </button>
         </div>
 
-        {currentMemberId && familyMembers.length > 0 && (
+        {familyMembers.length > 0 && (
           <div
             style={{
               display: 'flex',
