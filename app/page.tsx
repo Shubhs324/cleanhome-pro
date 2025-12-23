@@ -234,6 +234,16 @@ export default function Home() {
     setShowInstallPrompt(false);
   };
 
+// Wrappers pour le modal (sync vers async)
+const handleCreateFamilyWrapper = async () => {
+  const code = await firebaseCreateFamily();
+  return code || '';
+};
+
+const handleJoinFamilyWrapper = async (code: string) => {
+  await firebaseJoinFamily(code);
+};
+
   useEffect(() => {
     const scheduled = getScheduledTasksForMonth(currentYear, currentMonth, TASKS);
     setScheduledTasks(scheduled);
@@ -2488,13 +2498,14 @@ useEffect(() => {
         </div>
       )}
 	        {/* 🆕 Modale connexion famille Firebase */}
-      {showFamilyModal && (
-        <FamilyConnectionModal
-          onCreateFamily={firebaseCreateFamily}
-          onJoinFamily={firebaseJoinFamily}
-          onClose={() => setShowFamilyModal(false)}
-        />
-      )}
+{showFamilyModal && (
+  <FamilyConnectionModal
+    onCreateFamily={handleCreateFamilyWrapper}
+    onJoinFamily={handleJoinFamilyWrapper}
+    onClose={() => setShowFamilyModal(false)}
+  />
+)}
+
     </main>
   );
 }

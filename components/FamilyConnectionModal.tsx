@@ -2,8 +2,8 @@
 import { useState } from 'react';
 
 interface Props {
-  onCreateFamily: () => string;
-  onJoinFamily: (code: string) => void;
+  onCreateFamily: () => Promise<string>;  // ✅ Async
+  onJoinFamily: (code: string) => Promise<void | boolean>;  // ✅ Async
   onClose: () => void;
 }
 
@@ -11,16 +11,37 @@ export default function FamilyConnectionModal({ onCreateFamily, onJoinFamily, on
   const [mode, setMode] = useState<'choice' | 'create' | 'join'>('choice');
   const [joinCode, setJoinCode] = useState('');
   const [createdCode, setCreatedCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleCreate = () => {
-    const code = onCreateFamily();
-    setCreatedCode(code);
-    setMode('create');
+  const handleCreate = async () => {
+    setIsLoading(true);
+    try {
+      const code = await onCreateFamily();
+      if (code) {
+        setCreatedCode(code);
+        setMode('create');
+      }
+    } catch (error) {
+      console.error('Erreur création famille:', error);
+      alert('❌ Erreur lors de la création de la famille');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleJoin = () => {
-    if (joinCode.length === 6) {
-      onJoinFamily(joinCode.toUpperCase());
+  const handleJoin = async () => {
+    if (joinCode.length !== 6) return;
+    
+    setIsLoading(true);
+    try {
+      const success = await onJoinFamily(joinCode.toUpperCase());
+      if (success !== false) {
+        onClose();
+      }
+    } catch (error) {
+      console.error('Erreur rejoindre famille:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -46,7 +67,7 @@ export default function FamilyConnectionModal({ onCreateFamily, onJoinFamily, on
         {mode === 'choice' && (
           <>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', textAlign: 'center' }}>
-              👨‍👩‍��‍👦 Partage Familial
+              👨‍👩‍👧‍👦 Partage Familial
             </h2>
             <p style={{ color: '#64748b', marginBottom: '1.5rem', textAlign: 'center', fontSize: '0.9rem' }}>
               Synchronisez vos tâches en temps réel avec votre famille
@@ -54,34 +75,36 @@ export default function FamilyConnectionModal({ onCreateFamily, onJoinFamily, on
             
             <button
               onClick={handleCreate}
+              disabled={isLoading}
               style={{
                 width: '100%',
                 padding: '1rem',
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                background: isLoading ? '#94a3b8' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: '600',
                 fontSize: '1rem',
-                cursor: 'pointer',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
                 marginBottom: '1rem'
               }}
             >
-              🆕 Créer une famille
+              {isLoading ? '⏳ Création...' : '🆕 Créer une famille'}
             </button>
 
             <button
               onClick={() => setMode('join')}
+              disabled={isLoading}
               style={{
                 width: '100%',
                 padding: '1rem',
-                background: '#10b981',
+                background: isLoading ? '#94a3b8' : '#10b981',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: '600',
                 fontSize: '1rem',
-                cursor: 'pointer',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
                 marginBottom: '1rem'
               }}
             >
@@ -90,6 +113,7 @@ export default function FamilyConnectionModal({ onCreateFamily, onJoinFamily, on
 
             <button
               onClick={onClose}
+              disabled={isLoading}
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -98,7 +122,7 @@ export default function FamilyConnectionModal({ onCreateFamily, onJoinFamily, on
                 border: '2px solid #e2e8f0',
                 borderRadius: '8px',
                 fontWeight: '600',
-                cursor: 'pointer'
+                cursor: isLoading ? 'not-allowed' : 'pointer'
               }}
             >
               Annuler
@@ -177,6 +201,7 @@ export default function FamilyConnectionModal({ onCreateFamily, onJoinFamily, on
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
               placeholder="ABC123"
               maxLength={6}
+              disabled={isLoading}
               style={{
                 width: '100%',
                 padding: '1rem',
@@ -187,28 +212,30 @@ export default function FamilyConnectionModal({ onCreateFamily, onJoinFamily, on
                 letterSpacing: '0.2em',
                 fontWeight: '800',
                 marginBottom: '1rem',
-                textTransform: 'uppercase'
+                textTransform: 'uppercase',
+                opacity: isLoading ? 0.5 : 1
               }}
             />
             <button
               onClick={handleJoin}
-              disabled={joinCode.length !== 6}
+              disabled={joinCode.length !== 6 || isLoading}
               style={{
                 width: '100%',
                 padding: '1rem',
-                background: joinCode.length === 6 ? '#10b981' : '#e2e8f0',
+                background: (joinCode.length === 6 && !isLoading) ? '#10b981' : '#e2e8f0',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: '600',
-                cursor: joinCode.length === 6 ? 'pointer' : 'not-allowed',
+                cursor: (joinCode.length === 6 && !isLoading) ? 'pointer' : 'not-allowed',
                 marginBottom: '1rem'
               }}
             >
-              Rejoindre
+              {isLoading ? '⏳ Connexion...' : 'Rejoindre'}
             </button>
             <button
               onClick={() => setMode('choice')}
+              disabled={isLoading}
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -217,7 +244,7 @@ export default function FamilyConnectionModal({ onCreateFamily, onJoinFamily, on
                 border: '2px solid #e2e8f0',
                 borderRadius: '8px',
                 fontWeight: '600',
-                cursor: 'pointer'
+                cursor: isLoading ? 'not-allowed' : 'pointer'
               }}
             >
               Retour
