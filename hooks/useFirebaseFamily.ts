@@ -101,7 +101,6 @@ const syncData = async (path: string, data: any) => {
   });
       dataToSync = cleanData.filter(item => {
         const isValid = item && 
-          item.id && 
           item.taskId != null && // != null vérifie undefined ET null
           item.memberId != null && 
           item.date;
